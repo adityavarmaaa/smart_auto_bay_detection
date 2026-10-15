@@ -192,7 +192,18 @@ def run(
             log.exception("failed to stop plate worker")
 
         try:
-            pipe.flush(time.time())
+            flushed_events = pipe.flush(time.time())
+            for ev in flushed_events:
+                event_type = ev["event_type"]
+                event_counts[event_type] += 1
+                log.info(
+                    "%s %s plate=%s bay=%s t=%s",
+                    event_type,
+                    ev.get("direction") or "",
+                    (ev.get("plate") or {}).get("text"),
+                    (ev.get("bay") or {}).get("id"),
+                    ev.get("event_time"),
+                )
 
             log.info(
                 "EVENT SUMMARY: ENTRY=%d PARK_START=%d PARK_END=%d EXIT=%d TOTAL=%d",

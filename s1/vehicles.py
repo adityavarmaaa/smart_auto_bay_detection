@@ -134,8 +134,6 @@ class VehicleRegistry:
         candidates = []
 
         for vehicle in self.by_uid.values():
-            if not (vehicle.plate_final or vehicle.plate_inflight):
-                continue
 
             if vehicle.slot_id is not None:
                 continue
@@ -255,17 +253,12 @@ class VehicleRegistry:
         v = self.by_track.pop(track_id, None)
 
         if v is not None:
-            # Keep identities while OCR is still in flight so the
-            # asynchronous OCR result can update the original Vehicle.
-            # Also keep finalized identities for short tracker-ID recovery.
-            if v.plate_inflight or v.plate_final:
-                return v
+            # Retain the short-lived identity so a replacement tracker ID
+            # can reconnect to the same vehicle while OCR is resolving.
+            # _find_recoverable_vehicle prunes stale candidates.
+            return v
 
-            if v.slot_id is None:
-                self.by_uid.pop(v.uid, None)
-
-        return v
-
+        return None
     def release(self, vehicle):
         # Preserve identity until any submitted asynchronous OCR job returns.
         # Keep slot-associated vehicles available for lifecycle processing.

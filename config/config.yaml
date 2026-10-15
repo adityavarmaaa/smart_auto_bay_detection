@@ -1,9 +1,9 @@
-﻿# Only keys you want to change need to be here; everything else has defaults (s1/config.py).
+# Only keys you want to change need to be here; everything else has defaults (s1/config.py).
 camera_id: CAM-01
 parking_area_id: AREA-01
-source: sample.mp4            # video file for tuning, or rtsp://user:pass@192.168.1.10:554/stream
+source: "rtsp://192.168.68.130:8554/"
 replay: realtime              # realtime = drops frames like a live camera; sync = every frame
-geometry_file: data/geometry_vn20261005.json
+geometry_file: data/geometry_live.json
 
 detector:
   model_path: yolo11n.pt
@@ -30,5 +30,8 @@ plate:
 publisher:
   outbox_db: data/outbox_live.db
   s2_url: https://smart-parking-data-service.onrender.com/internal/events/vehicle
+
+
+
 
 

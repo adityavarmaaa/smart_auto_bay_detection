@@ -1,4 +1,4 @@
-import math
+﻿import math
 from dataclasses import dataclass
 
 import cv2
@@ -385,39 +385,15 @@ class SlotManager:
             ov = self.overlaps(t.bbox)
 
             if st["slot"] is None:
-                contact_sid = self.contact_slot(t.bbox)
-                if contact_sid is None:
-                    st["candidate_slot"] = None
-                    st["candidate_since"] = None
-                    continue
-
-                contact_overlap = ov.get(contact_sid, 0.0)
-                if contact_overlap < float(c["min_overlap"]):
-                    st["candidate_slot"] = None
-                    st["candidate_since"] = None
-                    continue
-
-                candidate = st.get("candidate_slot")
-                if candidate != contact_sid:
-                    st["candidate_slot"] = contact_sid
-                    st["candidate_since"] = ts
-
-                sid = contact_sid
-                frac = contact_overlap
-                if not ov:
-                    continue
-
-                # Keep the candidate stable through brief boundary overlap
-                # dips, but do not commit occupancy below minimum overlap.
+                # Prefer the bottom-centre contact point when it identifies
+                # a plausible bay, but allow overlap-based selection when
+                # detector-box jitter puts the contact point outside.
                 min_overlap = float(c["min_overlap"])
-
                 qualified = {
                     slot_id: overlap
                     for slot_id, overlap in ov.items()
                     if overlap >= min_overlap
                 }
-
-                candidate = st.get("candidate_slot")
 
                 if not qualified:
                     st["candidate_slot"] = None
@@ -428,29 +404,64 @@ class SlotManager:
                     qualified.items(),
                     key=lambda item: item[1],
                 )
+                contact_sid = self.contact_slot(t.bbox)
+                switch_margin = float(c.get("slot_switch_margin", 0.12))
+                candidate = st.get("candidate_slot")
 
-                if candidate not in qualified:
-                    sid = best_sid
-                    frac = best_frac
-                    st["candidate_slot"] = sid
-                    st["candidate_since"] = ts
-                else:
+                # Keep the current candidate while it remains plausible.
+                # Switch only when another qualified bay has a clear overlap
+                # advantage; small detector-box changes must not reset dwell.
+                if candidate in qualified:
                     current_frac = qualified[candidate]
-                    switch_margin = float(
-                        c.get("slot_switch_margin", 0.12)
-                    )
 
                     if (
-                        best_sid != candidate
-                        and best_frac > current_frac + switch_margin
+                        contact_sid in qualified
+                        and contact_sid != candidate
+                        and qualified[contact_sid] >= current_frac + switch_margin
                     ):
-                        sid = best_sid
-                        frac = best_frac
-                        st["candidate_slot"] = sid
-                        st["candidate_since"] = ts
+                        proposed_sid = contact_sid
+                    elif (
+                        best_sid != candidate
+                        and best_frac >= current_frac + switch_margin
+                    ):
+                        proposed_sid = best_sid
                     else:
-                        sid = candidate
-                        frac = current_frac
+                        proposed_sid = candidate
+                elif (
+                    contact_sid in qualified
+                    and qualified[contact_sid] >= best_frac - switch_margin
+                ):
+                    proposed_sid = contact_sid
+                else:
+                    ranked = sorted(
+                        qualified.items(),
+                        key=lambda item: item[1],
+                        reverse=True,
+                    )
+                    ambiguity_margin = float(
+                        c.get("slot_ambiguity_margin", 0.08)
+                    )
+                    if (
+                        contact_sid is None
+                        and len(ranked) > 1
+                        and ranked[0][1] - ranked[1][1] < ambiguity_margin
+                    ):
+                        log.debug(
+                            "SLOT_CANDIDATE_AMBIGUOUS track=%s candidates=%s",
+                            t.id, ranked[:2],
+                        )
+                        st["candidate_slot"] = None
+                        st["candidate_since"] = None
+                        continue
+                    proposed_sid = best_sid
+
+                candidate = st.get("candidate_slot")
+                if candidate != proposed_sid:
+                    st["candidate_slot"] = proposed_sid
+                    st["candidate_since"] = ts
+
+                sid = proposed_sid
+                frac = qualified[sid]
 
                 start = still_run_start(
                     hist,
@@ -590,17 +601,32 @@ class SlotManager:
 
                 ax, ay = st["anchor"]
 
+                overlap = float(ov.get(sid, 0.0))
+                leave_overlap = float(c["leave_overlap"])
+
                 moved = (
                     math.hypot(cx - ax, cy - ay)
                     > c["moved_frac"] * w
                 )
 
-                leaving = (
-                    ov.get(sid, 0.0) < c["leave_overlap"]
+                leaving = overlap < leave_overlap and moved
+
+                log.warning(
+                    "OCCUPANCY_DIAG track=%s uid=%s slot=%s overlap=%.3f "
+                    "moved=%s anchor=(%.1f,%.1f) current=(%.1f,%.1f) "
+                    "depart_since=%s",
+                    t.id, occ.vehicle.uid, sid, overlap,
+                    moved, ax, ay, cx, cy, st["depart_since"],
                 )
 
                 if not leaving:
                     st["depart_since"] = None
+
+                    # Refresh the anchor while the vehicle remains
+                    # confidently inside its assigned slot.
+                    if overlap >= leave_overlap:
+                        st["anchor"] = (cx, cy)
+
                     continue
 
                 if st["depart_since"] is None:
@@ -676,6 +702,7 @@ class SlotManager:
                 del self.occupants[sid]
 
         return events
+
 
 
 

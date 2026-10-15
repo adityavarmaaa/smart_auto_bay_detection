@@ -31,7 +31,7 @@ def build_event(
 
     event_time_iso = iso(event_time)
     detected_at_iso = iso(detected_at)
-    captured_at_iso = iso(captured_at) if captured_at is not None else None
+    captured_at_iso = iso(captured_at if captured_at is not None else event_time)
     received_at_iso = iso(received_at) if received_at is not None else None
 
     parking = None

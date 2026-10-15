@@ -1,0 +1,812 @@
+2026-10-14 11:52:11,579 INFO main: source ready: 1088x1920
+2026-10-14 11:52:11,680 INFO main: LOCAL TEST MODE: publisher disabled; events will not be sent to Service 2
+2026-10-14 11:52:12,079 INFO root: Skipping download of 'yolo-v9-t-384-license-plate-end2end' model, already exists at C:\Users\adity\.cache\open-image-models\yolo-v9-t-384-license-plate-end2end
+2026-10-14 11:52:12,275 INFO open_image_models.detection.core.yolo_v9.inference: Using ONNX Runtime with ['AzureExecutionProvider', 'CPUExecutionProvider'] provider(s)
+2026-10-14 11:52:12,276 INFO fast_plate_ocr.inference.plate_recognizer: Using device 'auto' with providers: ['AzureExecutionProvider', 'CPUExecutionProvider']
+2026-10-14 11:52:12,277 INFO root: Skipping download of 'cct-xs-v2-global-model' model, already exists at C:\Users\adity\.cache\fast-plate-ocr\cct-xs-v2-global-model
+2026-10-14 11:52:12,420 INFO pipeline: Pending-event recovery loaded 0 event(s)
+2026-10-14 11:52:17,423 INFO main: fps= 2.0 detect=   43ms track= 0.1ms total p50=   43 p95= 2280ms capture->event-ready p50= 4565 p95= 4978ms
+IDENTITY_CHECK new_track= 1 ts= 1791958935.115 candidates= []
+2026-10-14 11:52:18,314 INFO pipeline: PLATE_CROP uid=4d85bb9a153744adbcdf3e22a0e8e406 shape=(823, 392, 3) attempts=0
+2026-10-14 11:52:18,315 INFO plates: OCR_QUEUE key=4d85bb9a153744adbcdf3e22a0e8e406 wait_ms=0.1
+2026-10-14 11:52:18,357 DEBUG plates: OCR_RESULT key=4d85bb9a153744adbcdf3e22a0e8e406 crop=392x823 reads=0 []
+2026-10-14 11:52:18,357 INFO plates: OCR_TIMING key=4d85bb9a153744adbcdf3e22a0e8e406 process_ms=42.7
+2026-10-14 11:52:18,595 INFO pipeline: PLATE_CROP uid=4d85bb9a153744adbcdf3e22a0e8e406 shape=(1030, 525, 3) attempts=1
+2026-10-14 11:52:18,596 INFO plates: OCR_QUEUE key=4d85bb9a153744adbcdf3e22a0e8e406 wait_ms=0.1
+2026-10-14 11:52:18,663 DEBUG plates: OCR_RESULT key=4d85bb9a153744adbcdf3e22a0e8e406 crop=525x1030 reads=0 []
+2026-10-14 11:52:18,663 INFO plates: OCR_TIMING key=4d85bb9a153744adbcdf3e22a0e8e406 process_ms=67.6
+2026-10-14 11:52:18,890 INFO pipeline: PLATE_CROP uid=4d85bb9a153744adbcdf3e22a0e8e406 shape=(1101, 606, 3) attempts=2
+2026-10-14 11:52:18,892 INFO plates: OCR_QUEUE key=4d85bb9a153744adbcdf3e22a0e8e406 wait_ms=0.4
+2026-10-14 11:52:18,920 DEBUG plates: OCR_RESULT key=4d85bb9a153744adbcdf3e22a0e8e406 crop=606x1101 reads=0 []
+2026-10-14 11:52:18,921 INFO plates: OCR_TIMING key=4d85bb9a153744adbcdf3e22a0e8e406 process_ms=29.3
+2026-10-14 11:52:19,138 INFO pipeline: PLATE_CROP uid=4d85bb9a153744adbcdf3e22a0e8e406 shape=(1007, 683, 3) attempts=3
+2026-10-14 11:52:19,140 INFO plates: OCR_QUEUE key=4d85bb9a153744adbcdf3e22a0e8e406 wait_ms=0.4
+2026-10-14 11:52:19,176 DEBUG plates: OCR_RESULT key=4d85bb9a153744adbcdf3e22a0e8e406 crop=683x1007 reads=0 []
+2026-10-14 11:52:19,176 INFO plates: OCR_TIMING key=4d85bb9a153744adbcdf3e22a0e8e406 process_ms=37.0
+2026-10-14 11:52:19,364 INFO pipeline: PLATE_CROP uid=4d85bb9a153744adbcdf3e22a0e8e406 shape=(826, 736, 3) attempts=4
+2026-10-14 11:52:19,367 INFO plates: OCR_QUEUE key=4d85bb9a153744adbcdf3e22a0e8e406 wait_ms=0.4
+2026-10-14 11:52:19,396 DEBUG plates: OCR_RESULT key=4d85bb9a153744adbcdf3e22a0e8e406 crop=736x826 reads=0 []
+2026-10-14 11:52:19,396 INFO plates: OCR_TIMING key=4d85bb9a153744adbcdf3e22a0e8e406 process_ms=29.6
+2026-10-14 11:52:19,591 INFO pipeline: PLATE_CROP uid=4d85bb9a153744adbcdf3e22a0e8e406 shape=(702, 787, 3) attempts=5
+2026-10-14 11:52:19,592 INFO plates: OCR_QUEUE key=4d85bb9a153744adbcdf3e22a0e8e406 wait_ms=0.4
+2026-10-14 11:52:19,632 DEBUG plates: OCR_RESULT key=4d85bb9a153744adbcdf3e22a0e8e406 crop=787x702 reads=1 [('TG1', 0.961, 0.864)]
+2026-10-14 11:52:19,632 INFO plates: OCR_TIMING key=4d85bb9a153744adbcdf3e22a0e8e406 process_ms=39.7
+2026-10-14 11:52:19,969 INFO pipeline: PLATE_CROP uid=4d85bb9a153744adbcdf3e22a0e8e406 shape=(596, 822, 3) attempts=6
+2026-10-14 11:52:19,969 INFO plates: OCR_QUEUE key=4d85bb9a153744adbcdf3e22a0e8e406 wait_ms=0.4
+2026-10-14 11:52:20,013 DEBUG plates: OCR_RESULT key=4d85bb9a153744adbcdf3e22a0e8e406 crop=822x596 reads=1 [('TG15BA2444', 0.999, 0.91)]
+2026-10-14 11:52:20,014 INFO plates: OCR_TIMING key=4d85bb9a153744adbcdf3e22a0e8e406 process_ms=44.4
+2026-10-14 11:52:20,151 INFO pipeline: PLATE_STATE uid=4d85bb9a153744adbcdf3e22a0e8e406 state=CANDIDATE consensus=TG15BA2444 reads=1 attempt=7
+2026-10-14 11:52:20,257 INFO pipeline: PLATE_CROP uid=4d85bb9a153744adbcdf3e22a0e8e406 shape=(523, 798, 3) attempts=7
+2026-10-14 11:52:20,258 INFO plates: OCR_QUEUE key=4d85bb9a153744adbcdf3e22a0e8e406 wait_ms=0.4
+2026-10-14 11:52:20,314 DEBUG plates: OCR_RESULT key=4d85bb9a153744adbcdf3e22a0e8e406 crop=798x523 reads=1 [('TG15BA2444', 0.998, 0.89)]
+2026-10-14 11:52:20,314 INFO plates: OCR_TIMING key=4d85bb9a153744adbcdf3e22a0e8e406 process_ms=55.4
+2026-10-14 11:52:20,452 INFO pipeline: PLATE_STATE uid=4d85bb9a153744adbcdf3e22a0e8e406 state=CONFIRMED consensus=TG15BA2444 reads=2 attempt=8
+IDENTITY_CHECK new_track= 2 ts= 1791958939.315 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 0.0)]
+2026-10-14 11:52:21,062 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(365, 538, 3) attempts=0
+2026-10-14 11:52:21,062 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.3
+2026-10-14 11:52:21,110 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=538x365 reads=1 [('TG158A244', 0.953, 0.908)]
+2026-10-14 11:52:21,111 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=48.0
+2026-10-14 11:52:21,239 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=1 attempt=1
+2026-10-14 11:52:21,336 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(345, 476, 3) attempts=1
+2026-10-14 11:52:21,337 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.2
+2026-10-14 11:52:21,379 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=476x345 reads=1 [('TG158A244', 0.965, 0.92)]
+2026-10-14 11:52:21,380 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=42.1
+2026-10-14 11:52:21,519 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=2 attempt=2
+2026-10-14 11:52:21,614 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(313, 427, 3) attempts=2
+2026-10-14 11:52:21,614 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:21,663 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=427x313 reads=1 [('TG158A244', 0.962, 0.899)]
+2026-10-14 11:52:21,664 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=48.9
+2026-10-14 11:52:21,819 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=3 attempt=3
+2026-10-14 11:52:21,919 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(294, 382, 3) attempts=3
+2026-10-14 11:52:21,919 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:21,972 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=382x294 reads=1 [('TG158A24', 0.942, 0.902)]
+2026-10-14 11:52:21,972 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=53.6
+2026-10-14 11:52:22,133 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=4 attempt=4
+2026-10-14 11:52:22,267 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(267, 341, 3) attempts=4
+2026-10-14 11:52:22,268 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:22,312 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=341x267 reads=1 [('TG15B224', 0.754, 0.904)]
+2026-10-14 11:52:22,312 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=44.3
+2026-10-14 11:52:22,497 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=5 attempt=5
+2026-10-14 11:52:22,498 INFO main: fps= 4.9 detect=   48ms track= 0.2ms total p50=   57 p95=  145ms capture->event-ready p50= 2827 p95= 4790ms
+2026-10-14 11:52:22,579 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(249, 305, 3) attempts=5
+2026-10-14 11:52:22,580 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:22,623 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=305x249 reads=1 [('1G1502444', 0.768, 0.915)]
+2026-10-14 11:52:22,623 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=43.4
+2026-10-14 11:52:22,750 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=6 attempt=6
+2026-10-14 11:52:22,827 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(209, 276, 3) attempts=6
+2026-10-14 11:52:22,827 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:22,859 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=276x209 reads=1 [('141502444', 0.754, 0.906)]
+2026-10-14 11:52:22,859 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=31.9
+2026-10-14 11:52:22,992 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=7 attempt=7
+2026-10-14 11:52:23,087 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(222, 267, 3) attempts=7
+2026-10-14 11:52:23,087 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:23,128 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=267x222 reads=1 [('15111444', 0.693, 0.908)]
+2026-10-14 11:52:23,128 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=41.0
+2026-10-14 11:52:23,256 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=8 attempt=8
+2026-10-14 11:52:23,331 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(211, 256, 3) attempts=8
+2026-10-14 11:52:23,331 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:23,372 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=256x211 reads=1 [('1411M444', 0.735, 0.908)]
+2026-10-14 11:52:23,372 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=40.4
+2026-10-14 11:52:23,514 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=9 attempt=9
+2026-10-14 11:52:23,617 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(198, 255, 3) attempts=9
+2026-10-14 11:52:23,618 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:23,662 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=255x198 reads=1 [('1411M744', 0.797, 0.894)]
+2026-10-14 11:52:23,662 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=43.9
+2026-10-14 11:52:23,806 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=10 attempt=10
+2026-10-14 11:52:23,910 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(180, 239, 3) attempts=10
+2026-10-14 11:52:23,911 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:23,942 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=239x180 reads=1 [('1411M744', 0.665, 0.917)]
+2026-10-14 11:52:23,942 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=31.7
+2026-10-14 11:52:24,081 INFO pipeline: PLATE_STATE uid=e452e3b2f8134671a12b0c7edd942cfc state=CANDIDATE consensus=TG158A244 reads=11 attempt=11
+2026-10-14 11:52:24,199 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(173, 237, 3) attempts=11
+2026-10-14 11:52:24,199 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:24,242 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=237x173 reads=1 [('1411114', 0.464, 0.897)]
+2026-10-14 11:52:24,242 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=42.5
+2026-10-14 11:52:24,582 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(172, 236, 3) attempts=12
+2026-10-14 11:52:24,582 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:24,626 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=236x172 reads=1 [('111MV44', 0.494, 0.9)]
+2026-10-14 11:52:24,626 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=43.8
+2026-10-14 11:52:25,073 INFO pipeline: Holding ENTRY event_id=be5cf8a6bb874159806cdf38fc09a0ee vehicle=e452e3b2f8134671a12b0c7edd942cfc original_event_time=1791958944.0466998 plate_ready=False deadline=1791958955.072
+2026-10-14 11:52:25,073 DEBUG pipeline: Tripwire crossing track=2 direction=entry ts=1791958944.047
+2026-10-14 11:52:25,073 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(166, 248, 3) attempts=13
+2026-10-14 11:52:25,075 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:25,117 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=248x166 reads=1 [('T118411', 0.456, 0.903)]
+2026-10-14 11:52:25,117 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=42.2
+2026-10-14 11:52:25,368 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(157, 271, 3) attempts=14
+2026-10-14 11:52:25,369 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.5
+2026-10-14 11:52:25,414 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=271x157 reads=1 [('M184147', 0.427, 0.881)]
+2026-10-14 11:52:25,414 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=43.8
+2026-10-14 11:52:25,644 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(152, 269, 3) attempts=15
+2026-10-14 11:52:25,645 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:25,693 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=269x152 reads=1 [('1111144', 0.41, 0.88)]
+2026-10-14 11:52:25,693 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=48.6
+2026-10-14 11:52:25,943 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(155, 268, 3) attempts=16
+2026-10-14 11:52:25,943 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:25,994 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=268x155 reads=1 [('11441', 0.488, 0.897)]
+2026-10-14 11:52:25,994 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=50.7
+2026-10-14 11:52:26,241 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(155, 248, 3) attempts=17
+2026-10-14 11:52:26,242 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:26,288 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=248x155 reads=1 [('11144', 0.462, 0.882)]
+2026-10-14 11:52:26,289 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=46.7
+2026-10-14 11:52:26,584 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(149, 247, 3) attempts=18
+2026-10-14 11:52:26,584 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:26,645 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=247x149 reads=0 []
+2026-10-14 11:52:26,645 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=61.7
+2026-10-14 11:52:26,908 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(147, 242, 3) attempts=19
+2026-10-14 11:52:26,908 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:26,963 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=242x147 reads=0 []
+2026-10-14 11:52:26,963 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=55.1
+2026-10-14 11:52:27,209 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(146, 223, 3) attempts=20
+2026-10-14 11:52:27,209 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:27,257 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=223x146 reads=0 []
+2026-10-14 11:52:27,269 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=59.4
+2026-10-14 11:52:27,546 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(147, 221, 3) attempts=21
+2026-10-14 11:52:27,547 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.5
+2026-10-14 11:52:27,552 INFO main: fps= 5.4 detect=   54ms track= 0.2ms total p50=   59 p95=  165ms capture->event-ready p50= 1674 p95= 4616ms
+2026-10-14 11:52:27,595 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=221x147 reads=0 []
+2026-10-14 11:52:27,595 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=47.8
+2026-10-14 11:52:27,824 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(144, 211, 3) attempts=22
+2026-10-14 11:52:27,825 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:27,874 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=211x144 reads=0 []
+2026-10-14 11:52:27,874 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=49.0
+2026-10-14 11:52:28,142 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(148, 217, 3) attempts=23
+2026-10-14 11:52:28,142 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:28,179 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=217x148 reads=0 []
+2026-10-14 11:52:28,179 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=36.9
+2026-10-14 11:52:28,410 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(147, 209, 3) attempts=24
+2026-10-14 11:52:28,410 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:28,460 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=209x147 reads=0 []
+2026-10-14 11:52:28,460 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=49.3
+2026-10-14 11:52:28,799 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(149, 214, 3) attempts=25
+2026-10-14 11:52:28,799 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:28,840 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=214x149 reads=0 []
+2026-10-14 11:52:28,840 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=41.7
+2026-10-14 11:52:30,096 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(149, 219, 3) attempts=26
+2026-10-14 11:52:30,096 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:30,167 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=219x149 reads=0 []
+2026-10-14 11:52:30,167 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=70.8
+2026-10-14 11:52:30,858 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(150, 226, 3) attempts=27
+2026-10-14 11:52:30,858 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:30,911 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=226x150 reads=0 []
+2026-10-14 11:52:30,911 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=53.1
+2026-10-14 11:52:31,482 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(149, 224, 3) attempts=28
+2026-10-14 11:52:31,482 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:31,525 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=224x149 reads=0 []
+2026-10-14 11:52:31,525 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=43.6
+2026-10-14 11:52:31,910 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(152, 230, 3) attempts=29
+2026-10-14 11:52:31,910 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:31,975 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=230x152 reads=0 []
+2026-10-14 11:52:31,975 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=65.6
+2026-10-14 11:52:32,560 INFO main: fps= 4.9 detect=   57ms track= 0.2ms total p50=   65 p95=  330ms capture->event-ready p50= 1354 p95= 4519ms
+2026-10-14 11:52:32,877 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(147, 231, 3) attempts=30
+2026-10-14 11:52:32,878 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:32,928 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=231x147 reads=0 []
+2026-10-14 11:52:32,928 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=50.3
+2026-10-14 11:52:33,484 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(147, 240, 3) attempts=31
+2026-10-14 11:52:33,485 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:33,529 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=240x147 reads=0 []
+2026-10-14 11:52:33,529 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=44.4
+2026-10-14 11:52:33,781 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(143, 255, 3) attempts=32
+2026-10-14 11:52:33,781 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:33,843 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=255x143 reads=0 []
+2026-10-14 11:52:33,843 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=62.0
+2026-10-14 11:52:34,254 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(146, 270, 3) attempts=33
+2026-10-14 11:52:34,254 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:34,300 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=270x146 reads=0 []
+2026-10-14 11:52:34,300 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=46.4
+2026-10-14 11:52:34,583 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(141, 278, 3) attempts=34
+2026-10-14 11:52:34,584 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:34,632 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=278x141 reads=0 []
+2026-10-14 11:52:34,632 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=48.6
+2026-10-14 11:52:34,881 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(149, 296, 3) attempts=35
+2026-10-14 11:52:34,882 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:34,929 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=296x149 reads=0 []
+2026-10-14 11:52:34,929 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=47.2
+2026-10-14 11:52:35,114 ERROR pipeline: PLATE_WAIT_TIMEOUT event=ENTRY event_id=be5cf8a6bb874159806cdf38fc09a0ee vehicle=e452e3b2f8134671a12b0c7edd942cfc original_event_time=1791958944.0466998; event retained and NOT sent without a valid finalized plate
+2026-10-14 11:52:35,265 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(148, 310, 3) attempts=36
+2026-10-14 11:52:35,265 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:35,310 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=310x148 reads=0 []
+2026-10-14 11:52:35,310 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=44.7
+2026-10-14 11:52:35,642 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(149, 287, 3) attempts=37
+2026-10-14 11:52:35,642 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:35,683 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=287x149 reads=0 []
+2026-10-14 11:52:35,683 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=41.2
+2026-10-14 11:52:36,108 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(150, 314, 3) attempts=38
+2026-10-14 11:52:36,108 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.2
+2026-10-14 11:52:36,146 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=314x150 reads=0 []
+2026-10-14 11:52:36,146 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=37.8
+2026-10-14 11:52:36,526 INFO pipeline: PLATE_CROP uid=e452e3b2f8134671a12b0c7edd942cfc shape=(155, 366, 3) attempts=39
+2026-10-14 11:52:36,526 INFO plates: OCR_QUEUE key=e452e3b2f8134671a12b0c7edd942cfc wait_ms=0.1
+2026-10-14 11:52:36,559 DEBUG plates: OCR_RESULT key=e452e3b2f8134671a12b0c7edd942cfc crop=366x155 reads=0 []
+2026-10-14 11:52:36,559 INFO plates: OCR_TIMING key=e452e3b2f8134671a12b0c7edd942cfc process_ms=32.9
+2026-10-14 11:52:37,563 INFO main: fps= 5.0 detect=   65ms track= 0.2ms total p50=   75 p95=  322ms capture->event-ready p50= 1554 p95= 4368ms
+2026-10-14 11:52:38,187 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.333 stationary=2.00s required=4.00s history=93
+2026-10-14 11:52:38,310 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.343 stationary=2.00s required=4.00s history=94
+2026-10-14 11:52:38,413 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.342 stationary=1.80s required=4.00s history=95
+2026-10-14 11:52:38,554 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.350 stationary=1.80s required=4.00s history=96
+2026-10-14 11:52:38,700 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.370 stationary=1.20s required=4.00s history=97
+2026-10-14 11:52:38,928 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.378 stationary=1.00s required=4.00s history=98
+2026-10-14 11:52:39,324 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.381 stationary=1.20s required=4.00s history=99
+2026-10-14 11:52:39,434 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.378 stationary=1.20s required=4.00s history=100
+2026-10-14 11:52:39,530 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.374 stationary=0.80s required=4.00s history=101
+2026-10-14 11:52:39,632 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-07 reason=dwell overlap=0.381 stationary=1.00s required=4.00s history=102
+2026-10-14 11:52:39,734 DEBUG s1.logic: PARK_START_WAIT track=2 slot=A-05 reason=dwell overlap=0.324 stationary=0.00s required=4.00s history=103
+IDENTITY_CHECK new_track= 6 ts= 1791958959.515 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 18.2)]
+2026-10-14 11:52:39,831 INFO pipeline: PLATE_CROP uid=7d4865207a9348e6be6e427e6c517405 shape=(244, 187, 3) attempts=0
+2026-10-14 11:52:39,831 INFO plates: OCR_QUEUE key=7d4865207a9348e6be6e427e6c517405 wait_ms=0.1
+2026-10-14 11:52:39,876 DEBUG plates: OCR_RESULT key=7d4865207a9348e6be6e427e6c517405 crop=187x244 reads=1 [('T3334433', 0.443, 0.919)]
+2026-10-14 11:52:39,876 INFO plates: OCR_TIMING key=7d4865207a9348e6be6e427e6c517405 process_ms=45.3
+2026-10-14 11:52:40,175 INFO pipeline: PLATE_CROP uid=7d4865207a9348e6be6e427e6c517405 shape=(154, 142, 3) attempts=1
+2026-10-14 11:52:40,175 INFO plates: OCR_QUEUE key=7d4865207a9348e6be6e427e6c517405 wait_ms=0.1
+2026-10-14 11:52:40,222 DEBUG plates: OCR_RESULT key=7d4865207a9348e6be6e427e6c517405 crop=142x154 reads=1 [('1', 0.659, 0.645)]
+2026-10-14 11:52:40,222 INFO plates: OCR_TIMING key=7d4865207a9348e6be6e427e6c517405 process_ms=46.8
+IDENTITY_CHECK new_track= 7 ts= 1791958960.115 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 18.8), ('7d4865207a9348e6be6e427e6c517405', 6, False, True, 0.0)]
+2026-10-14 11:52:40,509 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(155, 402, 3) attempts=0
+2026-10-14 11:52:40,509 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:40,510 INFO pipeline: PLATE_STATE uid=7d4865207a9348e6be6e427e6c517405 state=UNKNOWN consensus=None reads=0 attempt=2
+2026-10-14 11:52:40,510 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.354 stationary=0.40s required=4.00s history=3
+2026-10-14 11:52:40,542 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=402x155 reads=0 []
+2026-10-14 11:52:40,542 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=32.8
+2026-10-14 11:52:40,696 INFO pipeline: PLATE_CROP uid=7d4865207a9348e6be6e427e6c517405 shape=(92, 95, 3) attempts=2
+2026-10-14 11:52:40,696 INFO plates: OCR_QUEUE key=7d4865207a9348e6be6e427e6c517405 wait_ms=0.1
+2026-10-14 11:52:40,697 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.354 stationary=0.60s required=4.00s history=4
+2026-10-14 11:52:40,741 DEBUG plates: OCR_RESULT key=7d4865207a9348e6be6e427e6c517405 crop=95x92 reads=0 []
+2026-10-14 11:52:40,743 INFO plates: OCR_TIMING key=7d4865207a9348e6be6e427e6c517405 process_ms=46.0
+2026-10-14 11:52:40,934 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(152, 401, 3) attempts=1
+2026-10-14 11:52:40,935 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:40,935 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.356 stationary=0.80s required=4.00s history=5
+2026-10-14 11:52:40,978 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=401x152 reads=0 []
+2026-10-14 11:52:40,979 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=44.2
+2026-10-14 11:52:41,217 INFO pipeline: Holding ENTRY event_id=2b427e6610134fe2866a717329f58606 vehicle=7d4865207a9348e6be6e427e6c517405 original_event_time=1791958960.5057676 plate_ready=False deadline=1791958971.216
+2026-10-14 11:52:41,217 DEBUG pipeline: Tripwire crossing track=6 direction=entry ts=1791958960.506
+2026-10-14 11:52:41,218 INFO pipeline: PLATE_CROP uid=7d4865207a9348e6be6e427e6c517405 shape=(145, 73, 3) attempts=3
+2026-10-14 11:52:41,219 INFO plates: OCR_QUEUE key=7d4865207a9348e6be6e427e6c517405 wait_ms=0.4
+2026-10-14 11:52:41,220 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.359 stationary=1.00s required=4.00s history=6
+2026-10-14 11:52:41,261 DEBUG plates: OCR_RESULT key=7d4865207a9348e6be6e427e6c517405 crop=73x145 reads=0 []
+2026-10-14 11:52:41,261 INFO plates: OCR_TIMING key=7d4865207a9348e6be6e427e6c517405 process_ms=42.5
+2026-10-14 11:52:41,455 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(151, 420, 3) attempts=2
+2026-10-14 11:52:41,456 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.7
+2026-10-14 11:52:41,461 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.339 stationary=1.20s required=4.00s history=7
+2026-10-14 11:52:41,484 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=420x151 reads=0 []
+2026-10-14 11:52:41,485 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=28.5
+2026-10-14 11:52:41,729 INFO pipeline: PLATE_CROP uid=7d4865207a9348e6be6e427e6c517405 shape=(132, 70, 3) attempts=4
+2026-10-14 11:52:41,729 INFO plates: OCR_QUEUE key=7d4865207a9348e6be6e427e6c517405 wait_ms=0.1
+2026-10-14 11:52:41,730 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.345 stationary=1.40s required=4.00s history=8
+2026-10-14 11:52:41,796 DEBUG plates: OCR_RESULT key=7d4865207a9348e6be6e427e6c517405 crop=70x132 reads=0 []
+2026-10-14 11:52:41,796 INFO plates: OCR_TIMING key=7d4865207a9348e6be6e427e6c517405 process_ms=68.0
+2026-10-14 11:52:42,017 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(154, 405, 3) attempts=3
+2026-10-14 11:52:42,017 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.352 stationary=1.60s required=4.00s history=9
+2026-10-14 11:52:42,018 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.9
+2026-10-14 11:52:42,064 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=405x154 reads=0 []
+2026-10-14 11:52:42,064 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=47.3
+2026-10-14 11:52:42,196 INFO pipeline: PLATE_CROP uid=7d4865207a9348e6be6e427e6c517405 shape=(108, 67, 3) attempts=5
+2026-10-14 11:52:42,196 INFO plates: OCR_QUEUE key=7d4865207a9348e6be6e427e6c517405 wait_ms=0.1
+2026-10-14 11:52:42,197 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.366 stationary=0.80s required=4.00s history=10
+2026-10-14 11:52:42,230 DEBUG plates: OCR_RESULT key=7d4865207a9348e6be6e427e6c517405 crop=67x108 reads=0 []
+2026-10-14 11:52:42,231 INFO plates: OCR_TIMING key=7d4865207a9348e6be6e427e6c517405 process_ms=34.4
+2026-10-14 11:52:42,339 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(154, 379, 3) attempts=4
+2026-10-14 11:52:42,340 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:42,340 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.376 stationary=0.80s required=4.00s history=11
+2026-10-14 11:52:42,373 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=379x154 reads=0 []
+2026-10-14 11:52:42,373 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=33.7
+2026-10-14 11:52:42,511 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.377 stationary=1.00s required=4.00s history=12
+2026-10-14 11:52:42,566 INFO main: fps= 5.1 detect=   72ms track= 0.3ms total p50=   78 p95=  317ms capture->event-ready p50= 1237 p95= 4220ms
+2026-10-14 11:52:42,634 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(156, 366, 3) attempts=5
+2026-10-14 11:52:42,634 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:42,634 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.389 stationary=1.20s required=4.00s history=13
+2026-10-14 11:52:42,674 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=366x156 reads=0 []
+2026-10-14 11:52:42,674 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=39.7
+2026-10-14 11:52:42,775 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.370 stationary=1.40s required=4.00s history=14
+2026-10-14 11:52:42,875 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(156, 369, 3) attempts=6
+2026-10-14 11:52:42,875 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+IDENTITY_CHECK new_track= 8 ts= 1791958962.515 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 21.2), ('fe1925f92d6f4a2fafc986d792808f4c', 7, False, True, 0.0)]
+2026-10-14 11:52:42,878 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(83, 87, 3) attempts=0
+2026-10-14 11:52:42,878 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.386 stationary=1.60s required=4.00s history=15
+2026-10-14 11:52:42,878 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.625 stationary=0.00s required=4.00s history=3
+2026-10-14 11:52:42,908 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=369x156 reads=0 []
+2026-10-14 11:52:42,908 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=31.9
+2026-10-14 11:52:42,908 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=29.5
+2026-10-14 11:52:42,961 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=87x83 reads=0 []
+2026-10-14 11:52:42,961 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=54.2
+2026-10-14 11:52:43,134 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.364 stationary=3.00s required=4.00s history=16
+2026-10-14 11:52:43,135 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.575 stationary=0.60s required=4.00s history=4
+2026-10-14 11:52:43,242 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(155, 379, 3) attempts=7
+2026-10-14 11:52:43,242 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:43,244 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(86, 96, 3) attempts=1
+2026-10-14 11:52:43,244 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.377 stationary=2.60s required=4.00s history=17
+2026-10-14 11:52:43,244 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.568 stationary=0.80s required=4.00s history=5
+2026-10-14 11:52:43,285 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=379x155 reads=0 []
+2026-10-14 11:52:43,286 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=43.2
+2026-10-14 11:52:43,286 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=41.4
+2026-10-14 11:52:43,340 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=96x86 reads=0 []
+2026-10-14 11:52:43,340 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=54.2
+2026-10-14 11:52:43,507 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.392 stationary=2.20s required=4.00s history=18
+2026-10-14 11:52:43,507 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.625 stationary=0.00s required=4.00s history=6
+2026-10-14 11:52:43,618 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(154, 383, 3) attempts=8
+2026-10-14 11:52:43,619 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:43,622 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(78, 94, 3) attempts=2
+2026-10-14 11:52:43,623 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.372 stationary=2.40s required=4.00s history=19
+2026-10-14 11:52:43,623 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.517 stationary=0.00s required=4.00s history=7
+2026-10-14 11:52:43,678 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=383x154 reads=0 []
+2026-10-14 11:52:43,678 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=58.9
+2026-10-14 11:52:43,678 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=55.3
+2026-10-14 11:52:43,731 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=94x78 reads=0 []
+2026-10-14 11:52:43,731 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=53.3
+2026-10-14 11:52:43,888 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.382 stationary=2.60s required=4.00s history=20
+2026-10-14 11:52:43,888 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.544 stationary=0.20s required=4.00s history=8
+2026-10-14 11:52:43,999 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(156, 390, 3) attempts=9
+2026-10-14 11:52:43,999 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:44,000 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.365 stationary=2.80s required=4.00s history=21
+2026-10-14 11:52:44,000 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.506 stationary=0.20s required=4.00s history=9
+2026-10-14 11:52:44,035 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=390x156 reads=0 []
+2026-10-14 11:52:44,035 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=36.3
+2026-10-14 11:52:44,181 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(84, 95, 3) attempts=3
+2026-10-14 11:52:44,182 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=0.1
+2026-10-14 11:52:44,183 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.362 stationary=3.00s required=4.00s history=22
+2026-10-14 11:52:44,183 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.460 stationary=0.60s required=4.00s history=10
+2026-10-14 11:52:44,229 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=95x84 reads=0 []
+2026-10-14 11:52:44,229 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=47.9
+2026-10-14 11:52:44,389 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(152, 400, 3) attempts=10
+2026-10-14 11:52:44,389 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:44,390 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.356 stationary=3.20s required=4.00s history=23
+2026-10-14 11:52:44,435 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=400x152 reads=0 []
+2026-10-14 11:52:44,435 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=45.7
+2026-10-14 11:52:44,577 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(82, 96, 3) attempts=4
+2026-10-14 11:52:44,577 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=0.1
+2026-10-14 11:52:44,577 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.369 stationary=3.40s required=4.00s history=24
+2026-10-14 11:52:44,578 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.402 stationary=0.60s required=4.00s history=11
+2026-10-14 11:52:44,629 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=96x82 reads=0 []
+2026-10-14 11:52:44,629 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=52.5
+2026-10-14 11:52:44,751 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(157, 382, 3) attempts=11
+2026-10-14 11:52:44,751 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:44,753 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.372 stationary=3.60s required=4.00s history=25
+2026-10-14 11:52:44,753 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.442 stationary=1.00s required=4.00s history=12
+2026-10-14 11:52:44,788 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=382x157 reads=0 []
+2026-10-14 11:52:44,789 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=37.5
+2026-10-14 11:52:44,925 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.366 stationary=3.80s required=4.00s history=26
+2026-10-14 11:52:44,925 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.465 stationary=1.00s required=4.00s history=13
+2026-10-14 11:52:45,045 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(153, 393, 3) attempts=12
+2026-10-14 11:52:45,045 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:45,046 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.465 stationary=1.40s required=4.00s history=14
+2026-10-14 11:52:45,046 INFO pipeline: Holding PARK_START event_id=a51e9cb0b79d4fd6b5902fcb939d4355 vehicle=fe1925f92d6f4a2fafc986d792808f4c original_event_time=1791958960.9145534 plate_ready=False deadline=1791958975.047
+2026-10-14 11:52:45,089 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=393x153 reads=0 []
+2026-10-14 11:52:45,089 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=43.5
+2026-10-14 11:52:45,258 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(79, 95, 3) attempts=5
+2026-10-14 11:52:45,258 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=0.1
+2026-10-14 11:52:45,258 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.460 stationary=1.80s required=4.00s history=15
+2026-10-14 11:52:45,308 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=95x79 reads=0 []
+2026-10-14 11:52:45,308 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=49.6
+2026-10-14 11:52:45,439 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(155, 388, 3) attempts=13
+2026-10-14 11:52:45,439 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:45,440 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.443 stationary=1.80s required=4.00s history=16
+2026-10-14 11:52:45,485 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=388x155 reads=0 []
+2026-10-14 11:52:45,486 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=45.8
+2026-10-14 11:52:45,715 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(85, 106, 3) attempts=6
+2026-10-14 11:52:45,715 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=0.0
+2026-10-14 11:52:45,716 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.423 stationary=2.20s required=4.00s history=17
+2026-10-14 11:52:45,763 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=106x85 reads=0 []
+2026-10-14 11:52:45,763 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=47.8
+2026-10-14 11:52:45,972 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(154, 382, 3) attempts=14
+2026-10-14 11:52:45,972 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.2
+2026-10-14 11:52:45,973 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.471 stationary=0.80s required=4.00s history=18
+2026-10-14 11:52:46,037 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=382x154 reads=0 []
+2026-10-14 11:52:46,037 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=65.9
+2026-10-14 11:52:46,176 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(78, 92, 3) attempts=7
+2026-10-14 11:52:46,176 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=0.1
+2026-10-14 11:52:46,177 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.471 stationary=2.60s required=4.00s history=19
+2026-10-14 11:52:46,222 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=92x78 reads=0 []
+2026-10-14 11:52:46,222 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=45.9
+2026-10-14 11:52:46,356 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(152, 391, 3) attempts=15
+2026-10-14 11:52:46,356 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:46,356 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.462 stationary=2.80s required=4.00s history=20
+2026-10-14 11:52:46,399 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=391x152 reads=0 []
+2026-10-14 11:52:46,399 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=43.1
+2026-10-14 11:52:46,544 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(81, 95, 3) attempts=8
+2026-10-14 11:52:46,544 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=0.1
+2026-10-14 11:52:46,544 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.477 stationary=3.00s required=4.00s history=21
+2026-10-14 11:52:46,594 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=95x81 reads=0 []
+2026-10-14 11:52:46,594 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=50.0
+2026-10-14 11:52:46,760 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(154, 387, 3) attempts=16
+2026-10-14 11:52:46,760 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:46,761 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.460 stationary=3.20s required=4.00s history=22
+2026-10-14 11:52:46,811 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=387x154 reads=0 []
+2026-10-14 11:52:46,812 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=51.1
+2026-10-14 11:52:46,979 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(112, 103, 3) attempts=9
+2026-10-14 11:52:46,980 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=0.0
+2026-10-14 11:52:46,980 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.432 stationary=3.40s required=4.00s history=23
+2026-10-14 11:52:47,022 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=103x112 reads=0 []
+2026-10-14 11:52:47,022 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=42.6
+2026-10-14 11:52:47,216 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(151, 396, 3) attempts=17
+2026-10-14 11:52:47,217 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.2
+2026-10-14 11:52:47,217 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.429 stationary=2.00s required=4.00s history=24
+2026-10-14 11:52:47,258 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=396x151 reads=0 []
+2026-10-14 11:52:47,258 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=41.4
+2026-10-14 11:52:47,432 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(77, 93, 3) attempts=10
+2026-10-14 11:52:47,432 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=0.1
+2026-10-14 11:52:47,434 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.494 stationary=3.80s required=4.00s history=25
+2026-10-14 11:52:47,477 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=93x77 reads=0 []
+2026-10-14 11:52:47,478 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=44.1
+2026-10-14 11:52:47,649 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(152, 384, 3) attempts=18
+2026-10-14 11:52:47,649 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:47,650 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.500 stationary=0.20s required=4.00s history=26
+2026-10-14 11:52:47,657 INFO main: fps= 5.1 detect=   85ms track= 0.3ms total p50=   90 p95=  271ms capture->event-ready p50=  909 p95= 4091ms
+2026-10-14 11:52:47,690 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=384x152 reads=0 []
+2026-10-14 11:52:47,690 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=41.5
+2026-10-14 11:52:47,842 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.500 stationary=0.00s required=4.00s history=27
+2026-10-14 11:52:47,961 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(151, 397, 3) attempts=19
+2026-10-14 11:52:47,962 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.2
+2026-10-14 11:52:47,962 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.533 stationary=0.20s required=4.00s history=28
+2026-10-14 11:52:48,011 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=397x151 reads=0 []
+2026-10-14 11:52:48,011 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=50.2
+2026-10-14 11:52:48,434 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.538 stationary=0.00s required=4.00s history=29
+2026-10-14 11:52:48,573 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(157, 366, 3) attempts=20
+2026-10-14 11:52:48,574 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:48,574 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(77, 113, 3) attempts=11
+2026-10-14 11:52:48,575 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.485 stationary=1.00s required=4.00s history=30
+2026-10-14 11:52:48,611 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=366x157 reads=0 []
+2026-10-14 11:52:48,611 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=37.1
+2026-10-14 11:52:48,611 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=36.4
+2026-10-14 11:52:48,687 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=113x77 reads=0 []
+2026-10-14 11:52:48,687 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=76.3
+2026-10-14 11:52:48,874 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.526 stationary=0.00s required=4.00s history=31
+2026-10-14 11:52:48,997 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(154, 397, 3) attempts=21
+2026-10-14 11:52:48,998 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.5
+2026-10-14 11:52:49,002 INFO pipeline: PLATE_CROP uid=b100b90d76b04b17835aafd7d7710111 shape=(83, 145, 3) attempts=12
+2026-10-14 11:52:49,002 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=dwell overlap=0.376 stationary=0.60s required=4.00s history=32
+2026-10-14 11:52:49,050 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=397x154 reads=0 []
+2026-10-14 11:52:49,051 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=52.0
+2026-10-14 11:52:49,051 INFO plates: OCR_QUEUE key=b100b90d76b04b17835aafd7d7710111 wait_ms=48.6
+2026-10-14 11:52:49,094 DEBUG plates: OCR_RESULT key=b100b90d76b04b17835aafd7d7710111 crop=145x83 reads=0 []
+2026-10-14 11:52:49,094 INFO plates: OCR_TIMING key=b100b90d76b04b17835aafd7d7710111 process_ms=43.5
+2026-10-14 11:52:49,261 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=overlap overlap=0.298 required=0.300
+2026-10-14 11:52:49,405 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(155, 416, 3) attempts=22
+2026-10-14 11:52:49,406 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.0
+2026-10-14 11:52:49,406 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=overlap overlap=0.299 required=0.300
+2026-10-14 11:52:49,449 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=416x155 reads=0 []
+2026-10-14 11:52:49,450 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=43.7
+2026-10-14 11:52:49,644 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=overlap overlap=0.263 required=0.300
+2026-10-14 11:52:49,757 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(156, 414, 3) attempts=23
+2026-10-14 11:52:49,757 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:49,758 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-05 reason=overlap overlap=0.252 required=0.300
+2026-10-14 11:52:49,802 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=414x156 reads=0 []
+2026-10-14 11:52:49,802 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=44.4
+2026-10-14 11:52:49,992 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-03 reason=dwell overlap=0.389 stationary=0.00s required=4.00s history=37
+2026-10-14 11:52:50,137 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(162, 425, 3) attempts=24
+2026-10-14 11:52:50,137 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:50,137 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-03 reason=dwell overlap=0.333 stationary=0.20s required=4.00s history=38
+2026-10-14 11:52:50,194 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=425x162 reads=0 []
+2026-10-14 11:52:50,195 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=57.1
+2026-10-14 11:52:50,533 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(166, 427, 3) attempts=25
+2026-10-14 11:52:50,534 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.2
+2026-10-14 11:52:50,583 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=427x166 reads=0 []
+2026-10-14 11:52:50,584 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=50.5
+2026-10-14 11:52:50,792 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-03 reason=dwell overlap=0.327 stationary=0.60s required=4.00s history=39
+2026-10-14 11:52:50,924 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(170, 420, 3) attempts=26
+2026-10-14 11:52:50,924 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:50,925 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-03 reason=dwell overlap=0.327 stationary=1.00s required=4.00s history=40
+2026-10-14 11:52:50,966 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=420x170 reads=0 []
+2026-10-14 11:52:50,966 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=41.6
+2026-10-14 11:52:51,105 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-03 reason=dwell overlap=0.359 stationary=1.00s required=4.00s history=41
+2026-10-14 11:52:51,211 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(171, 429, 3) attempts=27
+2026-10-14 11:52:51,211 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:51,212 DEBUG s1.logic: PARK_START_WAIT track=8 slot=A-03 reason=dwell overlap=0.370 stationary=1.40s required=4.00s history=42
+2026-10-14 11:52:51,256 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=429x171 reads=0 []
+2026-10-14 11:52:51,256 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=44.5
+2026-10-14 11:52:51,421 ERROR pipeline: PLATE_WAIT_TIMEOUT event=ENTRY event_id=2b427e6610134fe2866a717329f58606 vehicle=7d4865207a9348e6be6e427e6c517405 original_event_time=1791958960.5057676; event retained and NOT sent without a valid finalized plate
+2026-10-14 11:52:51,541 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(170, 426, 3) attempts=28
+2026-10-14 11:52:51,542 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:51,581 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=426x170 reads=0 []
+2026-10-14 11:52:51,581 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=39.7
+2026-10-14 11:52:51,865 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(173, 427, 3) attempts=29
+2026-10-14 11:52:51,865 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:51,905 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=427x173 reads=0 []
+2026-10-14 11:52:51,905 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=40.2
+2026-10-14 11:52:52,255 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(169, 427, 3) attempts=30
+2026-10-14 11:52:52,255 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:52,294 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=427x169 reads=0 []
+2026-10-14 11:52:52,294 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=39.1
+2026-10-14 11:52:52,550 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(166, 413, 3) attempts=31
+2026-10-14 11:52:52,550 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:52,590 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=413x166 reads=0 []
+2026-10-14 11:52:52,590 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=39.7
+2026-10-14 11:52:52,734 INFO main: fps= 5.1 detect=   86ms track= 0.3ms total p50=   91 p95=  254ms capture->event-ready p50=  619 p95= 3287ms
+2026-10-14 11:52:52,838 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(158, 386, 3) attempts=32
+2026-10-14 11:52:52,838 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:52,876 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=386x158 reads=0 []
+2026-10-14 11:52:52,876 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=37.9
+2026-10-14 11:52:53,152 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(159, 409, 3) attempts=33
+2026-10-14 11:52:53,153 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.3
+2026-10-14 11:52:53,204 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=409x159 reads=0 []
+2026-10-14 11:52:53,205 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=51.6
+2026-10-14 11:52:53,498 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(158, 405, 3) attempts=34
+2026-10-14 11:52:53,498 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:53,537 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=405x158 reads=0 []
+2026-10-14 11:52:53,537 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=38.5
+2026-10-14 11:52:53,781 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(157, 407, 3) attempts=35
+2026-10-14 11:52:53,781 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:53,812 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=407x157 reads=0 []
+2026-10-14 11:52:53,813 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=31.0
+2026-10-14 11:52:54,050 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(157, 414, 3) attempts=36
+2026-10-14 11:52:54,051 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:54,091 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=414x157 reads=0 []
+2026-10-14 11:52:54,091 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=40.3
+2026-10-14 11:52:54,354 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(156, 397, 3) attempts=37
+2026-10-14 11:52:54,354 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:54,394 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=397x156 reads=0 []
+2026-10-14 11:52:54,395 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=40.0
+2026-10-14 11:52:54,667 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(157, 411, 3) attempts=38
+2026-10-14 11:52:54,667 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:54,715 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=411x157 reads=0 []
+2026-10-14 11:52:54,715 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=48.0
+2026-10-14 11:52:54,946 INFO pipeline: PLATE_CROP uid=fe1925f92d6f4a2fafc986d792808f4c shape=(152, 402, 3) attempts=39
+2026-10-14 11:52:54,946 INFO plates: OCR_QUEUE key=fe1925f92d6f4a2fafc986d792808f4c wait_ms=0.1
+2026-10-14 11:52:54,983 DEBUG plates: OCR_RESULT key=fe1925f92d6f4a2fafc986d792808f4c crop=402x152 reads=0 []
+2026-10-14 11:52:54,984 INFO plates: OCR_TIMING key=fe1925f92d6f4a2fafc986d792808f4c process_ms=37.4
+2026-10-14 11:52:55,112 ERROR pipeline: PLATE_WAIT_TIMEOUT event=PARK_START event_id=a51e9cb0b79d4fd6b5902fcb939d4355 vehicle=fe1925f92d6f4a2fafc986d792808f4c original_event_time=1791958960.9145534; event retained and NOT sent without a valid finalized plate
+IDENTITY_CHECK new_track= 9 ts= 1791958977.315 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 36.0)]
+2026-10-14 11:52:56,035 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.523 stationary=0.40s required=4.00s history=3
+2026-10-14 11:52:56,152 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.523 stationary=0.60s required=4.00s history=4
+2026-10-14 11:52:56,278 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.562 stationary=0.60s required=4.00s history=5
+2026-10-14 11:52:56,574 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.545 stationary=1.40s required=4.00s history=6
+2026-10-14 11:52:56,669 INFO pipeline: PLATE_CROP uid=ab464758ce854b85962b2d5a74580f9f shape=(78, 95, 3) attempts=0
+2026-10-14 11:52:56,669 INFO plates: OCR_QUEUE key=ab464758ce854b85962b2d5a74580f9f wait_ms=0.0
+2026-10-14 11:52:56,669 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.557 stationary=0.00s required=4.00s history=7
+2026-10-14 11:52:56,716 DEBUG plates: OCR_RESULT key=ab464758ce854b85962b2d5a74580f9f crop=95x78 reads=0 []
+2026-10-14 11:52:56,716 INFO plates: OCR_TIMING key=ab464758ce854b85962b2d5a74580f9f process_ms=47.7
+2026-10-14 11:52:56,853 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.562 stationary=0.20s required=4.00s history=8
+2026-10-14 11:52:56,940 INFO pipeline: PLATE_CROP uid=ab464758ce854b85962b2d5a74580f9f shape=(91, 102, 3) attempts=1
+2026-10-14 11:52:56,941 INFO plates: OCR_QUEUE key=ab464758ce854b85962b2d5a74580f9f wait_ms=0.0
+2026-10-14 11:52:56,941 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.581 stationary=0.40s required=4.00s history=9
+2026-10-14 11:52:56,974 DEBUG plates: OCR_RESULT key=ab464758ce854b85962b2d5a74580f9f crop=102x91 reads=0 []
+2026-10-14 11:52:56,974 INFO plates: OCR_TIMING key=ab464758ce854b85962b2d5a74580f9f process_ms=33.0
+2026-10-14 11:52:57,209 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.562 stationary=0.60s required=4.00s history=10
+2026-10-14 11:52:57,342 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.557 stationary=0.00s required=4.00s history=11
+2026-10-14 11:52:57,445 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.558 stationary=0.20s required=4.00s history=12
+2026-10-14 11:52:57,539 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.588 stationary=0.40s required=4.00s history=13
+2026-10-14 11:52:57,637 INFO pipeline: PLATE_CROP uid=ab464758ce854b85962b2d5a74580f9f shape=(79, 92, 3) attempts=2
+2026-10-14 11:52:57,638 INFO plates: OCR_QUEUE key=ab464758ce854b85962b2d5a74580f9f wait_ms=0.1
+2026-10-14 11:52:57,638 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.624 stationary=0.80s required=4.00s history=14
+2026-10-14 11:52:57,685 DEBUG plates: OCR_RESULT key=ab464758ce854b85962b2d5a74580f9f crop=92x79 reads=0 []
+2026-10-14 11:52:57,686 INFO plates: OCR_TIMING key=ab464758ce854b85962b2d5a74580f9f process_ms=47.5
+2026-10-14 11:52:57,862 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.655 stationary=0.00s required=4.00s history=15
+2026-10-14 11:52:57,867 INFO main: fps= 5.4 detect=   88ms track= 0.3ms total p50=   93 p95=  254ms capture->event-ready p50=  395 p95= 1610ms
+2026-10-14 11:52:57,952 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.688 stationary=0.20s required=4.00s history=16
+2026-10-14 11:52:58,059 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.671 stationary=0.40s required=4.00s history=17
+2026-10-14 11:52:58,155 INFO pipeline: PLATE_CROP uid=ab464758ce854b85962b2d5a74580f9f shape=(82, 90, 3) attempts=3
+2026-10-14 11:52:58,155 INFO plates: OCR_QUEUE key=ab464758ce854b85962b2d5a74580f9f wait_ms=0.1
+2026-10-14 11:52:58,155 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.663 stationary=1.00s required=4.00s history=18
+2026-10-14 11:52:58,205 DEBUG plates: OCR_RESULT key=ab464758ce854b85962b2d5a74580f9f crop=90x82 reads=0 []
+2026-10-14 11:52:58,205 INFO plates: OCR_TIMING key=ab464758ce854b85962b2d5a74580f9f process_ms=49.7
+2026-10-14 11:52:58,381 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=overlap overlap=0.213 required=0.300
+2026-10-14 11:52:58,499 INFO pipeline: PLATE_CROP uid=ab464758ce854b85962b2d5a74580f9f shape=(79, 93, 3) attempts=4
+2026-10-14 11:52:58,499 INFO plates: OCR_QUEUE key=ab464758ce854b85962b2d5a74580f9f wait_ms=0.3
+2026-10-14 11:52:58,501 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.500 stationary=0.00s required=4.00s history=20
+2026-10-14 11:52:58,557 DEBUG plates: OCR_RESULT key=ab464758ce854b85962b2d5a74580f9f crop=93x79 reads=0 []
+2026-10-14 11:52:58,558 INFO plates: OCR_TIMING key=ab464758ce854b85962b2d5a74580f9f process_ms=57.9
+2026-10-14 11:52:58,760 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.571 stationary=0.00s required=4.00s history=21
+2026-10-14 11:52:58,852 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.541 stationary=0.20s required=4.00s history=22
+2026-10-14 11:52:58,938 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.679 stationary=0.00s required=4.00s history=23
+2026-10-14 11:52:59,020 INFO pipeline: PLATE_CROP uid=ab464758ce854b85962b2d5a74580f9f shape=(82, 89, 3) attempts=5
+2026-10-14 11:52:59,021 INFO plates: OCR_QUEUE key=ab464758ce854b85962b2d5a74580f9f wait_ms=0.1
+2026-10-14 11:52:59,021 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.671 stationary=0.00s required=4.00s history=24
+2026-10-14 11:52:59,064 DEBUG plates: OCR_RESULT key=ab464758ce854b85962b2d5a74580f9f crop=89x82 reads=0 []
+2026-10-14 11:52:59,064 INFO plates: OCR_TIMING key=ab464758ce854b85962b2d5a74580f9f process_ms=43.0
+2026-10-14 11:52:59,188 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.655 stationary=0.00s required=4.00s history=25
+2026-10-14 11:52:59,276 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.724 stationary=0.00s required=4.00s history=26
+2026-10-14 11:52:59,371 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.679 stationary=0.00s required=4.00s history=27
+2026-10-14 11:52:59,455 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.663 stationary=0.00s required=4.00s history=28
+2026-10-14 11:52:59,540 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.440 stationary=0.00s required=4.00s history=29
+2026-10-14 11:52:59,644 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=overlap overlap=0.298 required=0.300
+2026-10-14 11:52:59,760 INFO pipeline: PLATE_CROP uid=ab464758ce854b85962b2d5a74580f9f shape=(117, 100, 3) attempts=6
+2026-10-14 11:52:59,760 INFO plates: OCR_QUEUE key=ab464758ce854b85962b2d5a74580f9f wait_ms=0.1
+2026-10-14 11:52:59,760 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.333 stationary=0.00s required=4.00s history=31
+2026-10-14 11:52:59,812 DEBUG plates: OCR_RESULT key=ab464758ce854b85962b2d5a74580f9f crop=100x117 reads=0 []
+2026-10-14 11:52:59,812 INFO plates: OCR_TIMING key=ab464758ce854b85962b2d5a74580f9f process_ms=52.0
+2026-10-14 11:52:59,957 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.351 stationary=0.20s required=4.00s history=32
+2026-10-14 11:53:00,139 INFO pipeline: PLATE_CROP uid=ab464758ce854b85962b2d5a74580f9f shape=(134, 101, 3) attempts=7
+2026-10-14 11:53:00,139 INFO plates: OCR_QUEUE key=ab464758ce854b85962b2d5a74580f9f wait_ms=0.0
+2026-10-14 11:53:00,140 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=dwell overlap=0.344 stationary=0.60s required=4.00s history=33
+2026-10-14 11:53:00,180 DEBUG plates: OCR_RESULT key=ab464758ce854b85962b2d5a74580f9f crop=101x134 reads=0 []
+2026-10-14 11:53:00,180 INFO plates: OCR_TIMING key=ab464758ce854b85962b2d5a74580f9f process_ms=41.0
+2026-10-14 11:53:00,319 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=overlap overlap=0.092 required=0.300
+2026-10-14 11:53:00,490 INFO pipeline: PLATE_CROP uid=ab464758ce854b85962b2d5a74580f9f shape=(154, 374, 3) attempts=8
+2026-10-14 11:53:00,490 INFO plates: OCR_QUEUE key=ab464758ce854b85962b2d5a74580f9f wait_ms=0.1
+2026-10-14 11:53:00,490 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=overlap overlap=0.070 required=0.300
+2026-10-14 11:53:00,531 DEBUG plates: OCR_RESULT key=ab464758ce854b85962b2d5a74580f9f crop=374x154 reads=0 []
+2026-10-14 11:53:00,531 INFO plates: OCR_TIMING key=ab464758ce854b85962b2d5a74580f9f process_ms=41.3
+2026-10-14 11:53:00,654 DEBUG s1.logic: PARK_START_WAIT track=9 slot=A-06 reason=overlap overlap=0.061 required=0.300
+2026-10-14 11:53:02,872 INFO main: fps= 5.7 detect=   77ms track= 0.3ms total p50=   82 p95=  223ms capture->event-ready p50=  249 p95= 1610ms
+2026-10-14 11:53:03,934 INFO pipeline: EXIT_DEFERRED vehicle=fe1925f92d6f4a2fafc986d792808f4c crossing_ts=1791958990.205 reason=parked
+2026-10-14 11:53:03,934 DEBUG pipeline: Tripwire crossing track=7 direction=exit ts=1791958990.205
+IDENTITY_CHECK new_track= 10 ts= 1791958991.715 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 50.4)]
+2026-10-14 11:53:04,762 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.592 stationary=0.40s required=4.00s history=3
+2026-10-14 11:53:04,865 INFO pipeline: PLATE_CROP uid=9bb857cc4f274fd4b4d5f4ff443aed71 shape=(80, 79, 3) attempts=0
+2026-10-14 11:53:04,866 INFO plates: OCR_QUEUE key=9bb857cc4f274fd4b4d5f4ff443aed71 wait_ms=0.1
+2026-10-14 11:53:04,866 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.560 stationary=0.60s required=4.00s history=4
+2026-10-14 11:53:04,907 DEBUG plates: OCR_RESULT key=9bb857cc4f274fd4b4d5f4ff443aed71 crop=79x80 reads=0 []
+2026-10-14 11:53:04,907 INFO plates: OCR_TIMING key=9bb857cc4f274fd4b4d5f4ff443aed71 process_ms=41.4
+2026-10-14 11:53:05,096 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.551 stationary=0.80s required=4.00s history=5
+2026-10-14 11:53:05,365 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.755 stationary=1.20s required=4.00s history=6
+2026-10-14 11:53:05,477 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.832 stationary=1.40s required=4.00s history=7
+2026-10-14 11:53:05,585 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.755 stationary=1.60s required=4.00s history=8
+2026-10-14 11:53:05,687 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.861 stationary=1.80s required=4.00s history=9
+2026-10-14 11:53:05,787 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.918 stationary=0.20s required=4.00s history=10
+2026-10-14 11:53:05,788 INFO pipeline: Holding PARK_END event_id=e7b4320afdd842428d37e075f9fc2701 vehicle=fe1925f92d6f4a2fafc986d792808f4c original_event_time=1791958981.9145534 plate_ready=False deadline=1791958995.788
+2026-10-14 11:53:05,788 INFO pipeline: Holding EXIT event_id=bee6b91cecb848178c7e1a7fe32572d4 vehicle=fe1925f92d6f4a2fafc986d792808f4c original_event_time=1791958990.20464 plate_ready=False deadline=1791958995.789
+2026-10-14 11:53:05,898 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.101 required=0.300
+2026-10-14 11:53:05,898 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.792 stationary=0.40s required=4.00s history=11
+2026-10-14 11:53:06,109 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.835 stationary=2.60s required=4.00s history=12
+2026-10-14 11:53:06,282 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.144 required=0.300
+2026-10-14 11:53:06,282 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.900 stationary=1.00s required=4.00s history=13
+2026-10-14 11:53:06,446 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.144 required=0.300
+2026-10-14 11:53:06,446 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.859 stationary=1.20s required=4.00s history=14
+2026-10-14 11:53:06,560 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.132 required=0.300
+2026-10-14 11:53:06,560 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.824 stationary=1.40s required=4.00s history=15
+2026-10-14 11:53:06,660 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.147 required=0.300
+2026-10-14 11:53:06,661 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.977 stationary=1.40s required=4.00s history=16
+2026-10-14 11:53:06,759 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.102 required=0.300
+2026-10-14 11:53:06,759 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.842 stationary=3.60s required=4.00s history=17
+2026-10-14 11:53:06,890 INFO pipeline: PLATE_CROP uid=9bb857cc4f274fd4b4d5f4ff443aed71 shape=(78, 82, 3) attempts=1
+2026-10-14 11:53:06,890 INFO plates: OCR_QUEUE key=9bb857cc4f274fd4b4d5f4ff443aed71 wait_ms=0.1
+2026-10-14 11:53:06,891 DEBUG s1.logic: PARK_START_WAIT track=10 slot=A-07 reason=dwell overlap=0.702 stationary=0.20s required=4.00s history=18
+2026-10-14 11:53:06,922 DEBUG plates: OCR_RESULT key=9bb857cc4f274fd4b4d5f4ff443aed71 crop=82x78 reads=0 []
+2026-10-14 11:53:06,922 INFO plates: OCR_TIMING key=9bb857cc4f274fd4b4d5f4ff443aed71 process_ms=31.9
+2026-10-14 11:53:07,354 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.121 required=0.300
+2026-10-14 11:53:07,460 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.153 required=0.300
+2026-10-14 11:53:07,460 INFO pipeline: Holding PARK_START event_id=584159c4b61f4071b79b3a8968081bbd vehicle=9bb857cc4f274fd4b4d5f4ff443aed71 original_event_time=1791958991.3145533 plate_ready=False deadline=1791958997.461
+2026-10-14 11:53:07,566 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.110 required=0.300
+2026-10-14 11:53:07,666 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.145 required=0.300
+IDENTITY_CHECK new_track= 11 ts= 1791958996.915 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 55.6)]
+2026-10-14 11:53:07,864 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.141 required=0.300
+2026-10-14 11:53:07,865 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-04 reason=dwell overlap=0.415 stationary=0.40s required=4.00s history=3
+2026-10-14 11:53:07,873 INFO main: fps= 5.9 detect=   61ms track= 0.3ms total p50=   67 p95=  177ms capture->event-ready p50=-1177 p95=  620ms
+2026-10-14 11:53:07,967 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-04 reason=dwell overlap=0.370 stationary=0.60s required=4.00s history=4
+2026-10-14 11:53:08,069 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.199 required=0.300
+2026-10-14 11:53:08,168 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.204 required=0.300
+2026-10-14 11:53:08,260 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.185 required=0.300
+2026-10-14 11:53:08,260 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-04 reason=dwell overlap=0.426 stationary=0.80s required=4.00s history=5
+2026-10-14 11:53:08,362 INFO pipeline: PLATE_CROP uid=9bb857cc4f274fd4b4d5f4ff443aed71 shape=(77, 83, 3) attempts=2
+2026-10-14 11:53:08,363 INFO plates: OCR_QUEUE key=9bb857cc4f274fd4b4d5f4ff443aed71 wait_ms=0.1
+2026-10-14 11:53:08,363 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.194 required=0.300
+2026-10-14 11:53:08,364 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-04 reason=dwell overlap=0.404 stationary=1.00s required=4.00s history=6
+2026-10-14 11:53:08,398 DEBUG plates: OCR_RESULT key=9bb857cc4f274fd4b4d5f4ff443aed71 crop=83x77 reads=0 []
+2026-10-14 11:53:08,398 INFO plates: OCR_TIMING key=9bb857cc4f274fd4b4d5f4ff443aed71 process_ms=35.6
+2026-10-14 11:53:08,570 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.216 required=0.300
+2026-10-14 11:53:08,570 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-04 reason=dwell overlap=0.398 stationary=1.60s required=4.00s history=7
+2026-10-14 11:53:08,672 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-04 reason=dwell overlap=0.388 stationary=2.00s required=4.00s history=8
+2026-10-14 11:53:08,780 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.230 required=0.300
+2026-10-14 11:53:08,972 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.138 required=0.300
+2026-10-14 11:53:09,056 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.227 required=0.300
+2026-10-14 11:53:09,056 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-04 reason=dwell overlap=0.375 stationary=1.00s required=4.00s history=9
+2026-10-14 11:53:09,253 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.222 required=0.300
+2026-10-14 11:53:09,357 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.214 required=0.300
+2026-10-14 11:53:09,453 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.200 required=0.300
+2026-10-14 11:53:09,454 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-04 reason=dwell overlap=0.400 stationary=3.60s required=4.00s history=10
+2026-10-14 11:53:09,555 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.222 required=0.300
+2026-10-14 11:53:09,555 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-04 reason=dwell overlap=0.381 stationary=2.40s required=4.00s history=11
+2026-10-14 11:53:09,660 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.213 required=0.300
+2026-10-14 11:53:09,660 INFO pipeline: Holding PARK_START event_id=1aae1361332a4804b35e904f3de567b2 vehicle=35a1836b47c34557af8d17b95a8e2019 original_event_time=1791958996.5145533 plate_ready=False deadline=1791958999.661
+2026-10-14 11:53:09,752 INFO pipeline: PLATE_CROP uid=9bb857cc4f274fd4b4d5f4ff443aed71 shape=(82, 81, 3) attempts=3
+2026-10-14 11:53:09,752 INFO plates: OCR_QUEUE key=9bb857cc4f274fd4b4d5f4ff443aed71 wait_ms=0.0
+2026-10-14 11:53:09,753 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=overlap overlap=0.235 required=0.300
+2026-10-14 11:53:09,797 DEBUG plates: OCR_RESULT key=9bb857cc4f274fd4b4d5f4ff443aed71 crop=81x82 reads=0 []
+2026-10-14 11:53:09,797 INFO plates: OCR_TIMING key=9bb857cc4f274fd4b4d5f4ff443aed71 process_ms=45.1
+2026-10-14 11:53:10,093 INFO pipeline: Holding ENTRY event_id=fa88e0a09f32469e8807529159346d4c vehicle=9bb857cc4f274fd4b4d5f4ff443aed71 original_event_time=1791959000.712363 plate_ready=False deadline=1791959000.093
+2026-10-14 11:53:10,093 DEBUG pipeline: Tripwire crossing track=10 direction=entry ts=1791959000.712
+2026-10-14 11:53:10,094 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.303 stationary=1.00s required=4.00s history=187
+2026-10-14 11:53:10,457 DEBUG s1.logic: PARK_START_WAIT track=7 slot=A-07 reason=dwell overlap=0.310 stationary=2.40s required=4.00s history=188
+2026-10-14 11:53:11,778 INFO pipeline: Holding PARK_END event_id=26fdfa4dbd2c48618ebce7b30a2ff812 vehicle=35a1836b47c34557af8d17b95a8e2019 original_event_time=1791959000.5145533 plate_ready=False deadline=1791959001.778
+IDENTITY_CHECK new_track= 12 ts= 1791959004.315 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 63.0)]
+2026-10-14 11:53:11,892 INFO pipeline: PLATE_CROP uid=667d5781811c4d5299c1d89e54f6fd2e shape=(968, 567, 3) attempts=0
+2026-10-14 11:53:11,893 INFO plates: OCR_QUEUE key=667d5781811c4d5299c1d89e54f6fd2e wait_ms=0.1
+2026-10-14 11:53:11,930 DEBUG plates: OCR_RESULT key=667d5781811c4d5299c1d89e54f6fd2e crop=567x968 reads=0 []
+2026-10-14 11:53:11,930 INFO plates: OCR_TIMING key=667d5781811c4d5299c1d89e54f6fd2e process_ms=36.9
+2026-10-14 11:53:12,155 INFO pipeline: PLATE_CROP uid=667d5781811c4d5299c1d89e54f6fd2e shape=(1034, 749, 3) attempts=1
+2026-10-14 11:53:12,156 INFO plates: OCR_QUEUE key=667d5781811c4d5299c1d89e54f6fd2e wait_ms=0.2
+2026-10-14 11:53:12,197 DEBUG plates: OCR_RESULT key=667d5781811c4d5299c1d89e54f6fd2e crop=749x1034 reads=0 []
+2026-10-14 11:53:12,198 INFO plates: OCR_TIMING key=667d5781811c4d5299c1d89e54f6fd2e process_ms=41.0
+2026-10-14 11:53:12,365 INFO pipeline: PLATE_CROP uid=667d5781811c4d5299c1d89e54f6fd2e shape=(702, 851, 3) attempts=2
+2026-10-14 11:53:12,368 INFO plates: OCR_QUEUE key=667d5781811c4d5299c1d89e54f6fd2e wait_ms=1.3
+IDENTITY_CHECK new_track= 13 ts= 1791959005.115 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 63.8), ('667d5781811c4d5299c1d89e54f6fd2e', 12, False, True, 0.0)]
+2026-10-14 11:53:12,372 INFO pipeline: PLATE_CROP uid=01c608e291b9412a9722bc1ddb3cd59f shape=(138, 314, 3) attempts=0
+2026-10-14 11:53:12,373 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=dwell overlap=0.356 stationary=1.60s required=4.00s history=27
+2026-10-14 11:53:12,373 DEBUG s1.logic: PARK_START_WAIT track=13 slot=A-08 reason=dwell overlap=0.634 stationary=0.40s required=4.00s history=3
+2026-10-14 11:53:12,415 DEBUG plates: OCR_RESULT key=667d5781811c4d5299c1d89e54f6fd2e crop=851x702 reads=1 [('TS07KB0955', 0.96, 0.906)]
+2026-10-14 11:53:12,415 INFO plates: OCR_TIMING key=667d5781811c4d5299c1d89e54f6fd2e process_ms=46.3
+2026-10-14 11:53:12,415 INFO plates: OCR_QUEUE key=01c608e291b9412a9722bc1ddb3cd59f wait_ms=42.1
+2026-10-14 11:53:12,455 DEBUG plates: OCR_RESULT key=01c608e291b9412a9722bc1ddb3cd59f crop=314x138 reads=0 []
+2026-10-14 11:53:12,455 INFO plates: OCR_TIMING key=01c608e291b9412a9722bc1ddb3cd59f process_ms=40.9
+2026-10-14 11:53:12,558 INFO pipeline: PLATE_STATE uid=667d5781811c4d5299c1d89e54f6fd2e state=CANDIDATE consensus=TS07KB0955 reads=1 attempt=3
+2026-10-14 11:53:12,660 INFO pipeline: PLATE_CROP uid=667d5781811c4d5299c1d89e54f6fd2e shape=(508, 722, 3) attempts=3
+2026-10-14 11:53:12,662 INFO plates: OCR_QUEUE key=667d5781811c4d5299c1d89e54f6fd2e wait_ms=0.1
+2026-10-14 11:53:12,662 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=dwell overlap=0.389 stationary=0.40s required=4.00s history=28
+2026-10-14 11:53:12,701 DEBUG plates: OCR_RESULT key=667d5781811c4d5299c1d89e54f6fd2e crop=722x508 reads=1 [('TS07KB0955', 0.967, 0.894)]
+2026-10-14 11:53:12,701 INFO plates: OCR_TIMING key=667d5781811c4d5299c1d89e54f6fd2e process_ms=40.7
+2026-10-14 11:53:12,828 INFO pipeline: PLATE_STATE uid=667d5781811c4d5299c1d89e54f6fd2e state=CONFIRMED consensus=TS07KB0955 reads=2 attempt=4
+2026-10-14 11:53:12,828 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=dwell overlap=0.385 stationary=0.60s required=4.00s history=29
+2026-10-14 11:53:12,898 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=dwell overlap=0.366 stationary=0.20s required=4.00s history=30
+2026-10-14 11:53:12,906 INFO main: fps= 6.2 detect=   54ms track= 0.3ms total p50=   61 p95=  149ms capture->event-ready p50=-4619 p95=  449ms
+IDENTITY_CHECK new_track= 14 ts= 1791959006.315 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 65.0), ('667d5781811c4d5299c1d89e54f6fd2e', 12, True, False, 0.0)]
+2026-10-14 11:53:13,044 INFO pipeline: PLATE_CROP uid=7729b2102dbf40209506aca5d3ed3983 shape=(89, 108, 3) attempts=0
+2026-10-14 11:53:13,044 INFO plates: OCR_QUEUE key=7729b2102dbf40209506aca5d3ed3983 wait_ms=0.1
+2026-10-14 11:53:13,073 DEBUG plates: OCR_RESULT key=7729b2102dbf40209506aca5d3ed3983 crop=108x89 reads=0 []
+2026-10-14 11:53:13,073 INFO plates: OCR_TIMING key=7729b2102dbf40209506aca5d3ed3983 process_ms=29.2
+2026-10-14 11:53:13,153 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=dwell overlap=0.330 stationary=0.00s required=4.00s history=31
+2026-10-14 11:53:13,229 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.298 required=0.300
+2026-10-14 11:53:13,305 INFO pipeline: PLATE_CROP uid=7729b2102dbf40209506aca5d3ed3983 shape=(94, 81, 3) attempts=1
+2026-10-14 11:53:13,305 INFO plates: OCR_QUEUE key=7729b2102dbf40209506aca5d3ed3983 wait_ms=0.1
+2026-10-14 11:53:13,305 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.242 required=0.300
+2026-10-14 11:53:13,336 DEBUG plates: OCR_RESULT key=7729b2102dbf40209506aca5d3ed3983 crop=81x94 reads=0 []
+2026-10-14 11:53:13,336 INFO plates: OCR_TIMING key=7729b2102dbf40209506aca5d3ed3983 process_ms=31.1
+2026-10-14 11:53:13,441 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.258 required=0.300
+2026-10-14 11:53:13,442 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=dwell overlap=0.556 stationary=0.00s required=4.00s history=6
+2026-10-14 11:53:13,520 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.243 required=0.300
+2026-10-14 11:53:13,520 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=dwell overlap=0.575 stationary=0.20s required=4.00s history=7
+2026-10-14 11:53:13,594 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.291 required=0.300
+2026-10-14 11:53:13,594 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=dwell overlap=0.877 stationary=0.00s required=4.00s history=8
+2026-10-14 11:53:13,680 INFO pipeline: PLATE_CROP uid=7729b2102dbf40209506aca5d3ed3983 shape=(78, 68, 3) attempts=2
+2026-10-14 11:53:13,681 INFO plates: OCR_QUEUE key=7729b2102dbf40209506aca5d3ed3983 wait_ms=0.1
+2026-10-14 11:53:13,681 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=dwell overlap=0.302 stationary=0.80s required=4.00s history=37
+2026-10-14 11:53:13,681 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=dwell overlap=0.736 stationary=0.00s required=4.00s history=9
+2026-10-14 11:53:13,708 DEBUG plates: OCR_RESULT key=7729b2102dbf40209506aca5d3ed3983 crop=68x78 reads=0 []
+2026-10-14 11:53:13,709 INFO plates: OCR_TIMING key=7729b2102dbf40209506aca5d3ed3983 process_ms=28.0
+2026-10-14 11:53:13,836 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.239 required=0.300
+2026-10-14 11:53:13,837 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=dwell overlap=0.581 stationary=0.00s required=4.00s history=10
+2026-10-14 11:53:13,919 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.243 required=0.300
+2026-10-14 11:53:13,919 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=dwell overlap=0.758 stationary=0.00s required=4.00s history=11
+2026-10-14 11:53:13,994 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=dwell overlap=0.337 stationary=0.20s required=4.00s history=40
+2026-10-14 11:53:13,994 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=dwell overlap=0.500 stationary=0.00s required=4.00s history=12
+2026-10-14 11:53:14,068 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.136 required=0.300
+2026-10-14 11:53:14,069 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=overlap overlap=0.216 required=0.300
+2026-10-14 11:53:14,139 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.166 required=0.300
+2026-10-14 11:53:14,139 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=overlap overlap=0.158 required=0.300
+2026-10-14 11:53:14,212 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.153 required=0.300
+2026-10-14 11:53:14,212 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=overlap overlap=0.056 required=0.300
+2026-10-14 11:53:14,279 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.195 required=0.300
+2026-10-14 11:53:14,279 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=overlap overlap=0.096 required=0.300
+2026-10-14 11:53:14,351 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.088 required=0.300
+2026-10-14 11:53:14,352 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=overlap overlap=0.046 required=0.300
+2026-10-14 11:53:14,424 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.180 required=0.300
+2026-10-14 11:53:14,424 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=overlap overlap=0.060 required=0.300
+2026-10-14 11:53:14,492 INFO pipeline: PLATE_CROP uid=7729b2102dbf40209506aca5d3ed3983 shape=(78, 184, 3) attempts=3
+2026-10-14 11:53:14,492 INFO plates: OCR_QUEUE key=7729b2102dbf40209506aca5d3ed3983 wait_ms=0.1
+2026-10-14 11:53:14,492 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.191 required=0.300
+2026-10-14 11:53:14,493 DEBUG s1.logic: PARK_START_WAIT track=14 slot=A-05 reason=overlap overlap=0.026 required=0.300
+2026-10-14 11:53:14,519 DEBUG plates: OCR_RESULT key=7729b2102dbf40209506aca5d3ed3983 crop=184x78 reads=0 []
+2026-10-14 11:53:14,519 INFO plates: OCR_TIMING key=7729b2102dbf40209506aca5d3ed3983 process_ms=27.2
+2026-10-14 11:53:14,581 INFO pipeline: Recovered parked vehicle identity for track=14
+2026-10-14 11:53:14,582 INFO pipeline: PLATE_CROP uid=9bb857cc4f274fd4b4d5f4ff443aed71 shape=(89, 209, 3) attempts=4
+2026-10-14 11:53:14,582 INFO plates: OCR_QUEUE key=9bb857cc4f274fd4b4d5f4ff443aed71 wait_ms=0.0
+2026-10-14 11:53:14,583 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.171 required=0.300
+2026-10-14 11:53:14,617 DEBUG plates: OCR_RESULT key=9bb857cc4f274fd4b4d5f4ff443aed71 crop=209x89 reads=0 []
+2026-10-14 11:53:14,617 INFO plates: OCR_TIMING key=9bb857cc4f274fd4b4d5f4ff443aed71 process_ms=34.5
+2026-10-14 11:53:14,671 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.035 required=0.300
+2026-10-14 11:53:14,747 INFO pipeline: PLATE_CROP uid=9bb857cc4f274fd4b4d5f4ff443aed71 shape=(83, 213, 3) attempts=5
+2026-10-14 11:53:14,747 INFO plates: OCR_QUEUE key=9bb857cc4f274fd4b4d5f4ff443aed71 wait_ms=0.1
+2026-10-14 11:53:14,776 DEBUG plates: OCR_RESULT key=9bb857cc4f274fd4b4d5f4ff443aed71 crop=213x83 reads=0 []
+2026-10-14 11:53:14,776 INFO plates: OCR_TIMING key=9bb857cc4f274fd4b4d5f4ff443aed71 process_ms=29.0
+2026-10-14 11:53:14,979 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.044 required=0.300
+2026-10-14 11:53:15,087 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.041 required=0.300
+2026-10-14 11:53:15,175 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.003 required=0.300
+IDENTITY_CHECK new_track= 15 ts= 1791959011.315 candidates= [('4d85bb9a153744adbcdf3e22a0e8e406', 1, True, False, 70.0), ('667d5781811c4d5299c1d89e54f6fd2e', 12, True, False, 0.0)]
+2026-10-14 11:53:17,152 INFO pipeline: PLATE_CROP uid=11ae5bae477746e6af4fa4ed888e2755 shape=(93, 78, 3) attempts=0
+2026-10-14 11:53:17,153 INFO plates: OCR_QUEUE key=11ae5bae477746e6af4fa4ed888e2755 wait_ms=0.1
+2026-10-14 11:53:17,153 ERROR pipeline: PLATE_WAIT_TIMEOUT event=PARK_END event_id=e7b4320afdd842428d37e075f9fc2701 vehicle=fe1925f92d6f4a2fafc986d792808f4c original_event_time=1791958981.9145534; event retained and NOT sent without a valid finalized plate
+2026-10-14 11:53:17,154 ERROR pipeline: PLATE_WAIT_TIMEOUT event=EXIT event_id=bee6b91cecb848178c7e1a7fe32572d4 vehicle=fe1925f92d6f4a2fafc986d792808f4c original_event_time=1791958990.20464; event retained and NOT sent without a valid finalized plate
+2026-10-14 11:53:17,309 DEBUG plates: OCR_RESULT key=11ae5bae477746e6af4fa4ed888e2755 crop=78x93 reads=0 []
+2026-10-14 11:53:17,310 INFO plates: OCR_TIMING key=11ae5bae477746e6af4fa4ed888e2755 process_ms=157.5
+2026-10-14 11:53:17,677 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.021 required=0.300
+2026-10-14 11:53:17,677 ERROR pipeline: PLATE_WAIT_TIMEOUT event=PARK_START event_id=584159c4b61f4071b79b3a8968081bbd vehicle=9bb857cc4f274fd4b4d5f4ff443aed71 original_event_time=1791958991.3145533; event retained and NOT sent without a valid finalized plate
+2026-10-14 11:53:17,844 DEBUG s1.logic: PARK_START_WAIT track=11 slot=A-03 reason=overlap overlap=0.094 required=0.300
+2026-10-14 11:53:17,844 DEBUG s1.logic: PARK_START_WAIT track=15 slot=A-07 reason=dwell overlap=0.310 stationary=0.00s required=4.00s history=5
+2026-10-14 11:53:17,976 ERROR pipeline: UNRESOLVED_LIFECYCLE_EVENT event=ENTRY event_id=be5cf8a6bb874159806cdf38fc09a0ee vehicle=e452e3b2f8134671a12b0c7edd942cfc original_event_time=1791958944.0466998 plate_final=False; durable record retained and event NOT sent
+2026-10-14 11:53:17,976 ERROR pipeline: UNRESOLVED_LIFECYCLE_EVENT event=ENTRY event_id=2b427e6610134fe2866a717329f58606 vehicle=7d4865207a9348e6be6e427e6c517405 original_event_time=1791958960.5057676 plate_final=False; durable record retained and event NOT sent
+2026-10-14 11:53:17,976 ERROR pipeline: UNRESOLVED_LIFECYCLE_EVENT event=PARK_START event_id=a51e9cb0b79d4fd6b5902fcb939d4355 vehicle=fe1925f92d6f4a2fafc986d792808f4c original_event_time=1791958960.9145534 plate_final=False; durable record retained and event NOT sent
+2026-10-14 11:53:17,977 ERROR pipeline: UNRESOLVED_LIFECYCLE_EVENT event=PARK_END event_id=e7b4320afdd842428d37e075f9fc2701 vehicle=fe1925f92d6f4a2fafc986d792808f4c original_event_time=1791958981.9145534 plate_final=False; durable record retained and event NOT sent
+2026-10-14 11:53:17,977 ERROR pipeline: UNRESOLVED_LIFECYCLE_EVENT event=EXIT event_id=bee6b91cecb848178c7e1a7fe32572d4 vehicle=fe1925f92d6f4a2fafc986d792808f4c original_event_time=1791958990.20464 plate_final=False; durable record retained and event NOT sent
+2026-10-14 11:53:17,977 ERROR pipeline: UNRESOLVED_LIFECYCLE_EVENT event=PARK_START event_id=584159c4b61f4071b79b3a8968081bbd vehicle=9bb857cc4f274fd4b4d5f4ff443aed71 original_event_time=1791958991.3145533 plate_final=False; durable record retained and event NOT sent
+2026-10-14 11:53:17,977 ERROR pipeline: UNRESOLVED_LIFECYCLE_EVENT event=PARK_START event_id=1aae1361332a4804b35e904f3de567b2 vehicle=35a1836b47c34557af8d17b95a8e2019 original_event_time=1791958996.5145533 plate_final=False; durable record retained and event NOT sent
+2026-10-14 11:53:17,977 ERROR pipeline: UNRESOLVED_LIFECYCLE_EVENT event=ENTRY event_id=fa88e0a09f32469e8807529159346d4c vehicle=9bb857cc4f274fd4b4d5f4ff443aed71 original_event_time=1791959000.712363 plate_final=False; durable record retained and event NOT sent
+2026-10-14 11:53:17,978 ERROR pipeline: UNRESOLVED_LIFECYCLE_EVENT event=PARK_END event_id=26fdfa4dbd2c48618ebce7b30a2ff812 vehicle=35a1836b47c34557af8d17b95a8e2019 original_event_time=1791959000.5145533 plate_final=False; durable record retained and event NOT sent
+2026-10-14 11:53:17,999 INFO main: EVENT SUMMARY: ENTRY=0 PARK_START=0 PARK_END=0 EXIT=0 TOTAL=0
+2026-10-14 11:53:18,002 INFO main: fps= 6.1 detect=   50ms track= 0.3ms total p50=   58 p95=  134ms capture->event-ready p50=-6979 p95= -235ms

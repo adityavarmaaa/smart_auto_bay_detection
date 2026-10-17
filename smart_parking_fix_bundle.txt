@@ -1,0 +1,3360 @@
+
+========== s1\pipeline.py ==========
+
+import base64
+import logging
+import os
+import time
+import uuid
+from collections import Counter, deque
+
+import cv2
+import numpy as np
+
+from .attributes import dominant_color
+from .events import build_event
+from .logic import SlotManager, Tripwire, still_run_start
+from .plates import PlateVoter, crop_quality
+from .plate_crop import cut_plate
+from .plates import fix_indian
+from .tracker import ByteTracker
+from .vehicles import Vehicle, VehicleRegistry
+
+log = logging.getLogger("pipeline")
+
+LIFECYCLE_EVENT_TYPES = frozenset({
+    "ENTRY",
+    "PARK_START",
+    "PARK_END",
+    "EXIT",
+})
+
+
+class Stats:
+    def __init__(self, n=200):
+        self.d = {k: deque(maxlen=n) for k in ("detect", "track", "total", "e2e")}
+        self.frames = 0
+        self.t0 = time.time()
+
+    def add(self, k, v):
+        self.d[k].append(v)
+
+    def summary(self):
+        def p(k, q):
+            a = self.d[k]
+            return float(np.percentile(a, q)) if a else 0.0
+
+        fps = self.frames / max(time.time() - self.t0, 1e-6)
+        return (
+            f"fps={fps:4.1f} detect={p('detect', 50):5.0f}ms track={p('track', 50):4.1f}ms "
+            f"total p50={p('total', 50):5.0f} p95={p('total', 95):5.0f}ms "
+            f"capture->event-ready p50={p('e2e', 50):5.0f} p95={p('e2e', 95):5.0f}ms"
+        )
+
+
+class Pipeline:
+    def __init__(
+        self,
+        cfg,
+        geometry,
+        frame_size,
+        detector,
+        publisher,
+        plate_worker=None,
+        now_fn=time.time,
+    ):
+        self.cfg, self.cam = cfg, cfg["camera_id"]
+        self.now = now_fn
+        self.detector, self.publisher, self.plates = detector, publisher, plate_worker
+
+        t = cfg["tracker"]
+        self.tracker = ByteTracker(
+            t["high_thr"],
+            t["low_thr"],
+            t["match_iou"],
+            t["low_match_iou"],
+            t["max_age_s"],
+            t["min_hits"],
+        )
+
+        g = geometry.scaled(*frame_size)
+        self.geo = g
+
+        self.tripwire = Tripwire(
+            g.tripwire[0],
+            g.tripwire[1],
+            g.inside_point,
+            cfg["gate"]["margin_px"],
+            size_samples=cfg["gate"]["size_samples"],
+            min_size_change=cfg["gate"]["min_size_change"],
+        )
+
+        self.slots = SlotManager(g.slots, frame_size, cfg["parking"])
+
+        self.zone = (
+            np.array(g.plate_zone, np.int32).reshape(-1, 1, 2)
+            if g.plate_zone
+            else None
+        )
+
+        self.registry = VehicleRegistry()
+        self.stats = Stats()
+        self.snap_dir = cfg["publisher"]["snapshot_dir"]
+        self.last_tracks = []
+
+        # All four lifecycle events remain pending until a finalized,
+        # valid plate is available.
+        self.pending_parking_events = []
+
+        # Maps stable event IDs to their durable pending-event keys.
+        self._durable_pending_keys = {}
+
+        self._restore_pending_parking_events()
+
+    # ------------------------------------------------------------------
+    # Durable pending-event serialization and recovery
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _encode_crop(crop):
+        if crop is None:
+            return None
+
+        try:
+            ok, encoded = cv2.imencode(
+                ".jpg",
+                crop,
+                [int(cv2.IMWRITE_JPEG_QUALITY), 85],
+            )
+            if not ok:
+                return None
+            return base64.b64encode(encoded.tobytes()).decode("ascii")
+        except Exception:
+            log.exception("Could not encode crop for pending-event storage")
+            return None
+
+    @staticmethod
+    def _decode_crop(encoded):
+        if not encoded:
+            return None
+
+        try:
+            raw = base64.b64decode(encoded, validate=True)
+            array = np.frombuffer(raw, dtype=np.uint8)
+            return cv2.imdecode(array, cv2.IMREAD_COLOR)
+        except Exception:
+            log.exception("Could not restore crop for pending parking event")
+            return None
+
+    def _serialize_pending(self, pending):
+        v = pending["vehicle"]
+
+        return {
+            "event_id": pending["event_id"],
+            "event_type": pending["event_type"],
+            "event_time": pending["event_time"],
+            "detected_at": pending["detected_at"],
+            "received_at": pending.get("received_at"),
+            "captured_at": pending.get("captured_at"),
+            "direction": pending["direction"],
+            "slot": pending["slot"],
+            "inferred": pending["inferred"],
+            "created_at": pending["created_at"],
+            "deadline": pending["deadline"],
+            "timed_out": pending["timed_out"],
+            "recovery_crop_retry": pending.get("recovery_crop_retry", False),
+            "recovery_retry_due": pending.get("recovery_retry_due", False),
+            "vehicle": {
+                "uid": v.uid,
+                "track_id": v.track_id,
+                "first_ts": v.first_ts,
+                "cls_votes": list(v.cls_votes.items()),
+                "color_votes": list(v.color_votes.items()),
+                "plate_reads": [list(read) for read in v.voter.reads],
+                "plate_max_reads": v.voter.max_reads,
+                "plate_final": v.plate_final,
+                "plate_attempts": v.plate_attempts,
+                "plate_inflight": v.plate_inflight,
+                "last_plate_submit": v.last_plate_submit,
+                "last_color_ts": v.last_color_ts,
+                "last_crop": self._encode_crop(v.last_crop),
+                "any_emitted": v.any_emitted,
+                "emitted_plate": v.emitted_plate,
+                "slot_id": v.slot_id,
+            },
+        }
+
+    def _deserialize_pending(self, payload):
+        if payload.get("event_type") not in LIFECYCLE_EVENT_TYPES:
+            raise ValueError("Unsupported pending lifecycle event type")
+
+        if not payload.get("event_id"):
+            raise ValueError("Pending event has no stable event_id")
+
+        vehicle_data = payload["vehicle"]
+
+        v = Vehicle(
+            uid=vehicle_data["uid"],
+            track_id=int(vehicle_data["track_id"]),
+            first_ts=float(vehicle_data["first_ts"]),
+        )
+
+        v.cls_votes = Counter(
+            {
+                int(key): int(value)
+                for key, value in vehicle_data.get("cls_votes", [])
+            }
+        )
+        v.color_votes = Counter(
+            {
+                str(key): int(value)
+                for key, value in vehicle_data.get("color_votes", [])
+            }
+        )
+
+        voter = PlateVoter()
+        voter.max_reads = int(
+            vehicle_data.get("plate_max_reads", voter.max_reads)
+        )
+        voter.reads = [
+            (str(read[0]), float(read[1]), bool(read[2]))
+            for read in vehicle_data.get("plate_reads", [])
+        ]
+        v.voter = voter
+
+        v.plate_final = bool(vehicle_data.get("plate_final", False))
+        v.plate_attempts = int(vehicle_data.get("plate_attempts", 0))
+        v.last_plate_submit = float(
+            vehicle_data.get("last_plate_submit", 0.0)
+        )
+        v.last_color_ts = float(vehicle_data.get("last_color_ts", 0.0))
+
+        saved_inflight = bool(vehicle_data.get("plate_inflight", False))
+
+        # OCR jobs from the previous process no longer exist.
+        v.plate_inflight = False
+        v.last_crop = self._decode_crop(vehicle_data.get("last_crop"))
+
+        # An interrupted OCR job consumed an attempt but never delivered its
+        # result. Credit that attempt back so the existing retry limit remains
+        # useful after a restart.
+        if saved_inflight and not v.plate_final:
+            v.plate_attempts = max(0, v.plate_attempts - 1)
+
+        can_retry_crop = bool(v.last_crop is not None and not v.plate_final)
+
+        v.any_emitted = bool(vehicle_data.get("any_emitted", False))
+        v.emitted_plate = vehicle_data.get("emitted_plate")
+        v.slot_id = vehicle_data.get("slot_id")
+
+        return {
+            "event_id": payload["event_id"],
+            "event_type": payload["event_type"],
+            "vehicle": v,
+            "event_time": float(payload["event_time"]),
+            "detected_at": float(payload["detected_at"]),
+            "direction": payload.get("direction"),
+            "slot": payload.get("slot"),
+            "inferred": bool(payload.get("inferred", False)),
+            "created_at": float(payload["created_at"]),
+            "deadline": float(payload["deadline"]),
+            "timed_out": bool(payload.get("timed_out", False)),
+            "recovery_crop_retry": bool(
+                can_retry_crop
+                and (
+                    saved_inflight
+                    or payload.get("recovery_crop_retry", False)
+                    or v.last_crop is not None
+                )
+            ),
+            "recovery_retry_due": bool(can_retry_crop),
+        }
+
+    def _save_pending_event(self, pending):
+        save = getattr(self.publisher, "save_pending_event", None)
+        if not callable(save):
+            log.error(
+                "Publisher does not support durable pending-event storage; "
+                "event=%s remains memory-only",
+                pending.get("event_id"),
+            )
+            return False
+
+        event_key = pending["event_id"]
+
+        try:
+            save(event_key, self._serialize_pending(pending))
+            self._durable_pending_keys[event_key] = event_key
+            return True
+        except Exception:
+            log.exception(
+                "Could not persist pending lifecycle event id=%s",
+                event_key,
+            )
+            return False
+
+    def _persist_all_pending_events(self):
+        for pending in self.pending_parking_events:
+            self._save_pending_event(pending)
+
+    def _restore_pending_parking_events(self):
+        load = getattr(self.publisher, "load_pending_events", None)
+        if not callable(load):
+            log.warning(
+                "Publisher has no pending-event recovery interface"
+            )
+            return
+
+        try:
+            saved_events = load()
+        except Exception:
+            log.exception("Could not load durable pending lifecycle events")
+            return
+
+        for event_key, payload in saved_events:
+            try:
+                pending = self._deserialize_pending(payload)
+
+                if event_key != pending["event_id"]:
+                    raise ValueError(
+                        "Stored event key does not match event_id"
+                    )
+
+                if not pending["vehicle"].uid:
+                    raise ValueError("Pending event has no vehicle UID")
+
+                self.pending_parking_events.append(pending)
+                self._durable_pending_keys[event_key] = event_key
+
+                # Keep OCR results addressable while this event is pending.
+                self.registry.by_uid[pending["vehicle"].uid] = pending["vehicle"]
+
+                log.info(
+                    "Restored pending %s event_id=%s vehicle=%s "
+                    "original_event_time=%s crop_retry=%s",
+                    pending["event_type"],
+                    event_key,
+                    pending["vehicle"].uid,
+                    pending["event_time"],
+                    pending["recovery_crop_retry"],
+                )
+
+            except Exception:
+                # Leave invalid rows in SQLite for inspection/recovery.
+                log.exception(
+                    "Could not restore pending event key=%s; "
+                    "the database row has been retained",
+                    event_key,
+                )
+
+        log.info(
+            "Pending-event recovery loaded %d event(s)",
+            len(self.pending_parking_events),
+        )
+
+    def _publish_event(self, event):
+        """Persist to the outgoing outbox before deleting its pending row."""
+        event_id = event["event_id"]
+        pending_key = self._durable_pending_keys.get(event_id)
+
+        # Outbox.publish commits to SQLite before returning.
+        self.publisher.publish(event)
+
+        if pending_key is None:
+            return
+
+        delete = getattr(self.publisher, "delete_pending_event", None)
+        if not callable(delete):
+            log.error(
+                "Outgoing event %s was queued, but pending storage "
+                "cannot delete its row; it will be recovered again",
+                event_id,
+            )
+            return
+
+        try:
+            delete(pending_key)
+            self._durable_pending_keys.pop(event_id, None)
+        except Exception:
+            # The stable event ID makes a later outbox INSERT OR IGNORE safe.
+            log.exception(
+                "Outgoing event %s was queued, but pending-row deletion failed",
+                event_id,
+            )
+
+    # ------------------------------------------------------------------
+    # Snapshots and event construction
+    # ------------------------------------------------------------------
+
+    def _snapshot(self, v, etype, ts):
+        if v.last_crop is None or not self.snap_dir:
+            return None
+
+        d = os.path.join(
+            self.snap_dir,
+            time.strftime("%Y%m%d", time.gmtime(ts)),
+        )
+        os.makedirs(d, exist_ok=True)
+
+        path = os.path.join(
+            d,
+            f"{v.uid[:8]}_{etype}_{int(ts * 1000)}.jpg",
+        )
+        cv2.imwrite(path, v.last_crop)
+        return path
+
+    def _plate_snapshot(self, v, etype, ts):
+        _c = v.voter.consensus()
+        _crops = getattr(v, "plate_crops", None) or {}
+        crop = None
+        if _c and _crops:
+            if _c.text in _crops:
+                crop = _crops[_c.text][1]
+            else:
+                crop = max(_crops.values(), key=lambda t: t[0])[1]
+        if crop is None or not self.snap_dir:
+            return None
+        d = os.path.join(self.snap_dir, time.strftime("%Y%m%d", time.gmtime(ts)))
+        os.makedirs(d, exist_ok=True)
+        path = os.path.join(d, f"{v.uid[:8]}_{etype}_{int(ts * 1000)}_plate.jpg")
+        cv2.imwrite(path, crop)
+        return path
+
+    def _plate_ready(self, v):
+        """Require the configured finalized plate consensus before releasing lifecycle events."""
+        pc = self.cfg["plate"]
+        return v.voter.is_final(
+            pc["confirm_reads"],
+            pc["confirm_conf"],
+        )
+
+    def _build_and_append(self, out, pending):
+        """Build an event while preserving its original time and stable ID."""
+        v = pending["vehicle"]
+
+        ev = build_event(
+            pending["event_type"],
+            v,
+            self.cam,
+            pending["event_time"],
+            pending["detected_at"],
+            pending["direction"],
+            pending["slot"],
+            self._snapshot(
+                v,
+                pending["event_type"],
+                pending["event_time"],
+            ),
+            pending["inferred"],
+            captured_at=pending.get("captured_at"),
+            received_at=pending.get("received_at"),
+            parking_area_id=self.cfg["parking_area_id"],
+            plate_snapshot_uri=self._plate_snapshot(
+                v,
+                pending["event_type"],
+                pending["event_time"],
+            ),
+        )
+
+        # Reuse the durable ID if a process restarts before publication.
+        ev["event_id"] = pending["event_id"]
+
+        c = v.voter.consensus()
+        v.emitted_plate = c.text if c else None
+        v.any_emitted = True
+        out.append(ev)
+
+        log.info(
+            "Released %s event_id=%s vehicle=%s original_event_time=%s plate=%s",
+            pending["event_type"],
+            pending["event_id"],
+            v.uid,
+            ev["timestamp"],
+            c.text if c else None,
+        )
+
+    def _emit(
+        self,
+        out,
+        etype,
+        v,
+        event_time,
+        direction=None,
+        sid=None,
+        inferred=False,
+        received_at=None,
+        captured_at=None,
+    ):
+        slot = self.slots.slot_info(sid) if sid else None
+        detected_at = self.now()
+
+        pending = {
+            "event_id": uuid.uuid4().hex,
+            "event_type": etype,
+            "vehicle": v,
+            "event_time": event_time,
+            "detected_at": detected_at,
+            "received_at": received_at,
+            "captured_at": captured_at,
+            "direction": direction,
+            "slot": slot,
+            "inferred": inferred,
+            "created_at": detected_at,
+            "deadline": (
+                detected_at
+                + max(
+                    0.0,
+                    float(self.cfg["plate"].get("emit_deadline_s", 3.0)),
+                )
+            ),
+            "timed_out": False,
+            "recovery_crop_retry": False,
+            "recovery_retry_due": False,
+        }
+
+        if etype in LIFECYCLE_EVENT_TYPES:
+            # Persist before waiting for OCR or attempting publication.
+            self.pending_parking_events.append(pending)
+            self._save_pending_event(pending)
+
+            log.info(
+                "Holding %s event_id=%s vehicle=%s original_event_time=%s "
+                "plate_ready=%s deadline=%.3f",
+                etype,
+                pending["event_id"],
+                v.uid,
+                event_time,
+                self._plate_ready(v),
+                pending["deadline"],
+            )
+            return
+
+        # Non-lifecycle events retain their existing immediate behavior.
+        self._build_and_append(out, pending)
+
+    def _in_zone(self, x, y):
+        return (
+            self.zone is None
+            or cv2.pointPolygonTest(
+                self.zone,
+                (float(x), float(y)),
+                False,
+            ) >= 0
+        )
+
+    def _maybe_submit_plate(self, t, v, frame):
+        pc = self.cfg["plate"]
+
+        if (
+            self.plates is None
+            or not pc["enabled"]
+            or v.plate_final
+            or v.plate_inflight
+        ):
+            return
+
+        if (
+            v.plate_attempts >= pc["max_attempts"]
+            or frame.ts - v.last_plate_submit < pc["interval_s"]
+            or v.last_plate_frame_idx == frame.idx
+        ):
+            return
+
+        x1, y1, x2, y2 = t.bbox
+
+        if (
+            (y2 - y1) < pc["min_vehicle_height_px"]
+            or not self._in_zone((x1 + x2) / 2, y2)
+        ):
+            return
+
+        H, W = frame.image.shape[:2]
+        px, py = 0.05 * (x2 - x1), 0.05 * (y2 - y1)
+
+        # Clamp every crop boundary to the image dimensions.
+        xa = max(0, min(W, int(x1 - px)))
+        ya = max(0, min(H, int(y1 - py)))
+        xb = max(0, min(W, int(x2 + px)))
+        yb = max(0, min(H, int(y2 + py)))
+        if xb <= xa or yb <= ya:
+            return
+
+        crop = frame.image[ya:yb, xa:xb]
+        accepted, quality = crop_quality(
+            crop,
+            min_brightness=float(pc.get("min_crop_brightness", 8.0)),
+            max_brightness=float(pc.get("max_crop_brightness", 247.0)),
+            min_contrast=float(pc.get("min_crop_contrast", 5.0)),
+            min_laplacian_var=float(pc.get("min_crop_laplacian_var", 2.0)),
+        )
+        if not accepted:
+            log.debug(
+                "PLATE_CROP_REJECT uid=%s frame=%s reason=%s metrics=%s",
+                v.uid, frame.idx, quality.get("reason"), quality,
+            )
+            return
+
+        if crop.size and v.plate_attempts < 3:
+            import os
+            os.makedirs("data/debug_live_crops", exist_ok=True)
+            debug_path = (
+                f"data/debug_live_crops/{v.uid[:8]}_attempt{v.plate_attempts}.jpg"
+            )
+            cv2.imwrite(debug_path, crop)
+        log.info("PLATE_CROP uid=%s shape=%s attempts=%s", v.uid, crop.shape, v.plate_attempts)
+
+        if crop.size and self.plates.submit(v.uid, crop.copy()):
+            # Save the exact crop immediately. If this OCR job is interrupted
+            # by a restart, it can be resubmitted without the old track.
+            # Keep the largest accepted crop for recovery retries.
+            # Area is a proxy for available detail, not a guarantee of sharpness.
+            if (
+                v.last_crop is None
+                or crop.shape[0] * crop.shape[1]
+                > v.last_crop.shape[0] * v.last_crop.shape[1]
+            ):
+                v.last_crop = crop.copy()
+            v.plate_inflight = True
+            v.plate_inflight_observation_id = round(float(frame.ts), 6)
+            v.last_plate_frame_idx = int(frame.idx)
+            v.plate_attempts += 1
+            v.last_plate_submit = frame.ts
+
+    def _maybe_submit_recovered_crops(self, frame_ts):
+        """Retry saved OCR crops for recovered events without live tracks."""
+        pc = self.cfg["plate"]
+
+        if self.plates is None or not pc["enabled"]:
+            return
+
+        live_uids = {
+            v.uid for v in self.registry.by_track.values()
+        }
+
+        for pending in self.pending_parking_events:
+            if not pending.get("recovery_crop_retry", False):
+                continue
+
+            v = pending["vehicle"]
+
+            if (
+                v.uid in live_uids
+                or v.plate_final
+                or v.plate_inflight
+                or v.last_crop is None
+                or v.plate_attempts >= pc["max_attempts"]
+            ):
+                continue
+
+            due_now = pending.get("recovery_retry_due", False)
+            if (
+                not due_now
+                and frame_ts - v.last_plate_submit < pc["interval_s"]
+            ):
+                continue
+
+            try:
+                crop = v.last_crop.copy()
+                if crop.size and self.plates.submit(v.uid, crop):
+                    v.plate_inflight = True
+                    v.plate_attempts += 1
+                    v.last_plate_submit = frame_ts
+                    pending["recovery_retry_due"] = False
+
+                    log.info(
+                        "Resubmitted saved OCR crop for pending %s "
+                        "event_id=%s vehicle=%s attempt=%d/%d",
+                        pending["event_type"],
+                        pending["event_id"],
+                        v.uid,
+                        v.plate_attempts,
+                        pc["max_attempts"],
+                    )
+            except Exception:
+                log.exception(
+                    "Could not resubmit saved OCR crop for event_id=%s",
+                    pending["event_id"],
+                )
+
+    def _apply_plate_results(self):
+        pc = self.cfg["plate"]
+
+        for uid, reads, crop in (self.plates.poll() if self.plates else []):
+            v = self.registry.by_uid.get(uid)
+
+            if v is None:
+                for pending in self.pending_parking_events:
+                    candidate = pending["vehicle"]
+                    if candidate.uid == uid:
+                        v = candidate
+                        break
+
+            if v is None:
+                log.warning("Ignoring OCR result for unknown vehicle uid=%s", uid)
+                continue
+
+            observation_id = v.plate_inflight_observation_id
+            v.plate_inflight_observation_id = None
+            v.plate_inflight = False
+
+            def acceptable_read(r):
+                if r.conf < float(pc["min_ocr_conf"]):
+                    return False
+                if r.det_conf < float(pc.get("min_plate_detector_conf", 0.30)):
+                    return False
+                try:
+                    x1, y1, x2, y2 = map(float, r.bbox)
+                    width, height = x2 - x1, y2 - y1
+                    if width < float(pc.get("min_plate_width_px", 24)):
+                        return False
+                    if height < float(pc.get("min_plate_height_px", 8)):
+                        return False
+                    ratio = width / max(height, 1e-6)
+                    if not (
+                        float(pc.get("min_plate_aspect_ratio", 1.5))
+                        <= ratio
+                        <= float(pc.get("max_plate_aspect_ratio", 7.0))
+                    ):
+                        return False
+                except (TypeError, ValueError):
+                    return False
+                return True
+
+            good = [r for r in reads if acceptable_read(r)]
+
+            if good:
+                selected = max(
+                    good,
+                    key=lambda r: float(r.conf) * float(r.det_conf),
+                )
+
+                v.voter.add(
+                    selected.text,
+                    selected.conf,
+                    observation_id=observation_id,
+                )
+
+                if (
+                    v.last_crop is None
+                    or crop.shape[0] * crop.shape[1]
+                    > v.last_crop.shape[0] * v.last_crop.shape[1]
+                ):
+                    v.last_crop = crop.copy()
+
+                plate_crop = cut_plate(crop, selected.bbox)
+                plate_text, plate_valid = fix_indian(selected.text)
+
+                if plate_crop is not None and plate_valid:
+                    store = getattr(v, "plate_crops", None)
+                    if store is None:
+                        store = v.plate_crops = {}
+
+                    previous = store.get(plate_text)
+                    if previous is None or selected.conf >= previous[0]:
+                        store[plate_text] = (selected.conf, plate_crop)
+
+                v.plate_final = v.voter.is_final(
+                    pc["confirm_reads"],
+                    pc["confirm_conf"],
+                )
+
+                consensus = v.voter.consensus()
+                log.info(
+                    "PLATE_STATE uid=%s state=%s selected=%s "
+                    "ocr_conf=%.3f det_conf=%.3f consensus=%s reads=%d "
+                    "attempt=%d",
+                    uid,
+                    v.plate_status,
+                    selected.text,
+                    float(selected.conf),
+                    float(selected.det_conf),
+                    consensus.text if consensus else None,
+                    len(v.voter.reads),
+                    v.plate_attempts,
+                )
+
+                if v.plate_final:
+                    for pending in self.pending_parking_events:
+                        if pending["vehicle"].uid == uid:
+                            pending["recovery_crop_retry"] = False
+                            pending["recovery_retry_due"] = False
+
+    def _release_ready_parking_events(self, out, final=False):
+        """Queue finalized lifecycle events; keep unresolved events durable."""
+        now = self.now()
+        remaining = []
+        local_preview = getattr(self.publisher, 'local_preview', False)
+
+        for pending in self.pending_parking_events:
+            v = pending["vehicle"]
+
+            if self._plate_ready(v):
+                self._build_and_append(out, pending)
+                continue
+
+            if local_preview and (
+                now >= pending["deadline"] or final
+            ):
+                log.warning(
+                    "LOCAL_PREVIEW_PLATE_UNKNOWN event=%s event_id=%s vehicle=%s",
+                    pending["event_type"],
+                    pending["event_id"],
+                    v.uid,
+                )
+                self._build_and_append(out, pending)
+                continue
+
+            if now >= pending["deadline"] and not pending["timed_out"]:
+                pending["timed_out"] = True
+                log.error(
+                    "PLATE_WAIT_TIMEOUT event=%s event_id=%s vehicle=%s "
+                    "original_event_time=%s; event retained and NOT sent "
+                    "without a valid finalized plate",
+                    pending["event_type"],
+                    pending["event_id"],
+                    v.uid,
+                    pending["event_time"],
+                )
+
+            if final:
+                log.error(
+                    "UNRESOLVED_LIFECYCLE_EVENT event=%s event_id=%s vehicle=%s "
+                    "original_event_time=%s plate_final=%s; durable record "
+                    "retained and event NOT sent",
+                    pending["event_type"],
+                    pending["event_id"],
+                    v.uid,
+                    pending["event_time"],
+                    v.plate_final,
+                )
+
+            remaining.append(pending)
+
+        self.pending_parking_events = remaining
+        self._persist_all_pending_events()
+
+    def process(self, frame):
+        t0 = time.perf_counter()
+        events = []
+
+        dets = self.detector.detect(frame.image)
+        t1 = time.perf_counter()
+
+        tracks, removed = self.tracker.update(dets, frame.ts)
+        t2 = time.perf_counter()
+
+        # Release removed tracker IDs from parking state BEFORE processing
+        # newly created tracks. This lets recover_lost_track() rebind a
+        # replacement tracker to the original parked Vehicle identity.
+        for t in removed:
+            self.tripwire.forget(t.id)
+            self.slots.on_track_removed(t)
+
+            v = self.registry.by_track.get(t.id)
+            if v is not None:
+                v.pending.clear()
+            self.registry.drop_track(t.id)
+
+        self.last_tracks = tracks
+        cc = self.cfg["color"]
+
+        for t in tracks:
+            # IMPORTANT:
+            # Try to restore the original parked Vehicle identity BEFORE
+            # get_or_create() can create a fresh Vehicle for this new tracker ID.
+            recovered = self.slots.recover_lost_track(
+                t,
+                frame.ts,
+                self.registry,
+            )
+
+            if recovered:
+                log.info(
+                    "Recovered parked vehicle identity for track=%s",
+                    t.id,
+                )
+
+            # If this is a fresh tracker ID but we already have a recently
+            # identified vehicle, preserve that Vehicle object so its finalized
+            # plate/type/color can be used when parking is confirmed.
+            v = self.registry.get_or_create(t, frame.ts)
+            v.last_seen_ts = frame.ts
+            v.cls_votes[t.cls] += 1
+
+            x1, y1, x2, y2 = t.bbox
+
+            if (
+                frame.ts - v.last_color_ts >= cc["interval_s"]
+                and (y2 - y1) >= cc["min_box_h"]
+                and sum(v.color_votes.values()) < cc["max_samples"]
+            ):
+                crop = frame.image[
+                    int(y1):int(y2),
+                    int(x1):int(x2),
+                ]
+
+                col = dominant_color(crop) if crop.size else None
+
+                if col:
+                    v.color_votes[col] += 1
+
+                v.last_color_ts = frame.ts
+
+            # Use the existing tripwire's confirmed direction and original
+            # crossing timestamp to generate gate ENTRY/EXIT events.
+            crossing = self.tripwire.update(
+                t.id,
+                (x1 + x2) / 2,
+                y2,
+                frame.ts,
+            )
+
+            # Tripwire is used only as positional/directional evidence.
+            # Parking state is authoritative for ENTRY/EXIT lifecycle events.
+            # Tripwire confirms gate ENTRY/EXIT. SlotManager independently
+            # owns PARK_START/PARK_END. Lifecycle events pass through
+            # the existing plate-validation hold in _emit().
+            if crossing:
+                direction, crossing_ts = crossing
+
+                if direction == "entry":
+                    self._emit(
+                        events,
+                        "ENTRY",
+                        v,
+                        crossing_ts,
+                        direction="entry",
+                        sid=v.slot_id,
+                        inferred=False,
+                    )
+                    v.pending_entry_received_at = None
+
+                elif direction == "exit":
+                    if v.has_parked:
+                        v.pending_exit_crossing_ts = crossing_ts
+                        log.info(
+                            "EXIT_DEFERRED vehicle=%s crossing_ts=%.3f reason=parked",
+                            v.uid, crossing_ts,
+                        )
+                    else:
+                        self._emit(
+                            events,
+                            "EXIT",
+                            v,
+                            crossing_ts,
+                            direction="exit",
+                            sid=v.slot_id,
+                            inferred=False,
+                        )
+                        v.pending_exit_crossing_ts = None
+
+                log.debug(
+                    "Tripwire crossing track=%s direction=%s ts=%.3f",
+                    t.id,
+                    direction,
+                    crossing_ts,
+                )
+            self._maybe_submit_plate(t, v, frame)
+
+
+        # Retry recovered crops before polling so their results can be applied
+        # by the normal result handler below.
+        self._maybe_submit_recovered_crops(frame.ts)
+        self._apply_plate_results()
+
+        # SlotManager owns parking-slot transitions. Preserve their event types
+        # rather than incorrectly translating them into gate ENTRY/EXIT.
+        for slot_event, v, et, sid, inferred in self.slots.update(
+            tracks,
+            frame.ts,
+            self.registry,
+        ):
+            if slot_event not in ("PARK_START", "PARK_END"):
+                log.warning(
+                    "Ignoring unknown SlotManager event type: %s",
+                    slot_event,
+                )
+                continue
+
+            event_type = slot_event
+
+            self._emit(
+                events,
+                event_type,
+                v,
+                et,
+                sid=sid,
+                inferred=inferred,
+            )
+
+            if event_type == "PARK_START":
+                v.has_parked = True
+            elif event_type == "PARK_END":
+                v.has_parked = False
+                exit_ts = v.pending_exit_crossing_ts
+                if exit_ts is not None:
+                    self._emit(
+                        events,
+                        "EXIT",
+                        v,
+                        exit_ts,
+                        direction="exit",
+                        sid=sid,
+                        inferred=False,
+                    )
+                    v.pending_exit_crossing_ts = None
+
+            if inferred:
+                self.registry.release(v)
+
+        self._release_ready_parking_events(events)
+
+        # Preserve the existing late plate-update behavior.
+        for v in list(self.registry.by_uid.values()):
+            c = v.voter.consensus()
+
+            if (
+                v.any_emitted
+                and v.plate_final
+                and c
+                and c.text != v.emitted_plate
+            ):
+                self._emit(
+                    events,
+                    "VEHICLE_UPDATE",
+                    v,
+                    frame.ts,
+                )
+
+        
+        for ev in events:
+            self._publish_event(ev)
+
+        # Keep the latest vehicle votes and OCR state durable for unresolved
+        # lifecycle events, including after their vehicle track has disappeared.
+        self._persist_all_pending_events()
+
+        done = time.perf_counter()
+
+        self.stats.add("detect", (t1 - t0) * 1000)
+        self.stats.add("track", (t2 - t1) * 1000)
+        self.stats.add("total", (done - t0) * 1000)
+        self.stats.add("e2e", (self.now() - frame.ts) * 1000)
+        self.stats.frames += 1
+
+        return events
+
+    def flush(self, ts):
+        events = []
+
+        # Collect completed OCR jobs; the worker may already be stopped.
+        self._apply_plate_results()
+        self._release_ready_parking_events(events, final=True)
+
+        for v in list(self.registry.by_uid.values()):
+            v.pending.clear()
+
+        for ev in events:
+            self._publish_event(ev)
+
+        # Do not clear unresolved records. They must remain recoverable.
+        self._persist_all_pending_events()
+
+        return events
+
+    def draw(self, img):
+        g = self.geo
+
+        cv2.line(
+            img,
+            tuple(map(int, g.tripwire[0])),
+            tuple(map(int, g.tripwire[1])),
+            (0, 255, 255),
+            2,
+        )
+
+        for s in g.slots:
+            occ = self.slots.occupants.get(s["slot_id"])
+            col = (0, 0, 255) if occ else (0, 200, 0)
+
+            cv2.polylines(
+                img,
+                [np.array(s["polygon"], np.int32)],
+                True,
+                col,
+                2,
+            )
+
+            cv2.putText(
+                img,
+                s["slot_id"],
+                tuple(map(int, s["polygon"][0])),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                col,
+                1,
+            )
+
+        # Visible parking occupancy summary
+        total_slots = len(g.slots)
+        occupied_slots = [
+            s["slot_id"]
+            for s in g.slots
+            if self.slots.occupants.get(s["slot_id"])
+        ]
+        occupied_count = len(occupied_slots)
+        free_count = max(0, total_slots - occupied_count)
+
+        cv2.rectangle(img, (10, 10), (560, 105), (20, 20, 20), -1)
+        cv2.putText(
+            img,
+            f"SLOTS: {occupied_count}/{total_slots} occupied",
+            (25, 45),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.9,
+            (0, 255, 255),
+            2,
+        )
+        cv2.putText(
+            img,
+            f"AVAILABLE: {free_count}",
+            (25, 82),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (0, 255, 0),
+            2,
+        )
+
+        if occupied_slots:
+            print(
+                "SLOT_SUMMARY occupied=%s/%s slots=%s"
+                % (occupied_count, total_slots, ",".join(occupied_slots)),
+                flush=True,
+            )
+
+        for t in self.last_tracks:
+            v = self.registry.by_track.get(t.id)
+
+            x1, y1, x2, y2 = map(int, t.bbox)
+
+            cv2.rectangle(
+                img,
+                (x1, y1),
+                (x2, y2),
+                (255, 120, 0),
+                2,
+            )
+
+            c = v.voter.consensus() if v else None
+
+            try:
+                _n = __import__('time').time()
+                _d = self.__dict__.setdefault('_lp', {})
+                if _n - _d.get(t.id, 0) >= 1.0:
+                    _d[t.id] = _n
+                    try:
+                        _k = __import__('sqlite3').connect('data/live_attrs.db', timeout=2)
+                        _k.execute('create table if not exists live_attrs(ts real, track integer, plate text, colour text)')
+                        _k.execute('insert into live_attrs values (?,?,?,?)', (_n, t.id, (c.text if c else None), (v.color() if v else None)))
+                        _k.commit(); _k.close()
+                    except Exception:
+                        pass
+                    print('LIVE #%s plate=%s colour=%s' % (t.id, (c.text if c else '?'), (v.color() if v else '')), flush=True)
+            except Exception:
+                pass
+            label = (
+                f"#{t.id} "
+                f"{(c.text if c else '?')} "
+                f"{v.color() if v else ''}"
+            )
+
+            cv2.putText(
+                img,
+                label,
+                (x1, max(15, y1 - 6)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.55,
+                (255, 255, 255),
+                2,
+            )
+
+        return img
+
+
+========== s1\plates.py ==========
+
+import logging
+import queue
+import re
+import threading
+import time
+from dataclasses import dataclass
+
+log = logging.getLogger("plates")
+
+STATE_CODES = set(
+    "AN AP AR AS BR CH CG DD DL DN GA GJ HP HR JH JK KA KL LA LD MH ML MN MP MZ "
+    "NL OD OR PB PY RJ SK TG TN TR TS UA UK UP WB".split()
+)
+_TO_DIGIT = {"O": "0", "Q": "0", "D": "0", "I": "1", "L": "1", "Z": "2",
+             "S": "5", "B": "8", "G": "6", "T": "7"}
+_TO_LETTER = {"0": "O", "1": "I", "2": "Z", "5": "S", "8": "B", "6": "G", "4": "A", "7": "T"}
+_STD = re.compile(r"^[A-Z]{2}\d{2}[A-Z]{0,3}\d{4}$")
+_STD1 = re.compile(r"^[A-Z]{2}\d[A-Z]{1,3}\d{4}$")
+_BH = re.compile(r"^\d{2}BH\d{4}[A-Z]{1,2}$")
+
+
+def normalize(text):
+    return re.sub(r"[^A-Z0-9]", "", (text or "").upper())
+
+
+def _apply(t, types):
+    out = []
+    for ch, ty in zip(t, types):
+        if ty == "D":
+            out.append(ch if ch.isdigit() else _TO_DIGIT.get(ch, ch))
+        else:
+            out.append(ch if ch.isalpha() else _TO_LETTER.get(ch, ch))
+    return "".join(out)
+
+
+def fix_indian(text):
+    """Return (corrected_text, format_valid). Corrects look-alike characters
+    by position (letters/digits expected at each slot of an Indian plate)."""
+    t = normalize(text)
+    n = len(t)
+    if n in (9, 10) and t[2:4] == "BH":
+        f = _apply(t, "DDLLDDDD" + "L" * (n - 8))
+        if _BH.match(f):
+            return f, True
+
+    best = None
+    for r in (2, 1):
+        s = n - 6 - r
+        if not 1 <= s <= 3:
+            continue
+        f = _apply(t, "LL" + "D" * r + "L" * s + "DDDD")
+        if _STD1.match(f) if r == 1 else _STD.match(f):
+            if f[:2] in STATE_CODES and (r == 2 or f[:2] == "DL"):
+                subs = sum(a != b for a, b in zip(t, f))
+                if best is None or (subs, -r) < best[0]:
+                    best = ((subs, -r), f)
+    if best:
+        return best[1], True
+    return t, False
+
+
+@dataclass
+class Consensus:
+    text: str
+    conf: float
+    n_reads: int
+    valid: bool
+
+
+class PlateVoter:
+    """Collects reads across frames and votes character by character,
+    weighted by OCR confidence. Prefers reads that match Indian plate format."""
+
+    def __init__(self, max_reads=60):
+        self.reads = []
+        self.max_reads = max_reads
+        self._observation_ids = set()
+
+    def add(self, raw_text, conf, observation_id=None):
+        # A single decoded frame may only contribute one vote to consensus.
+        if observation_id is not None:
+            if observation_id in self._observation_ids:
+                return False
+            self._observation_ids.add(observation_id)
+        fixed, valid = fix_indian(raw_text)
+
+        if len(fixed) < 6:
+            return False
+
+        # Reject structurally invalid standard Indian plates.
+        # Standard format:
+        #   STATE + 1-2 district digits + 1-3 series letters + 4 digits.
+        # Bharat (BH) plates keep their existing validation path.
+        if valid and fixed[2:4] != "BH":
+            if len(fixed) not in (9, 10):
+                return False
+
+            state = fixed[:2]
+            body = fixed[2:-4]
+            suffix = fixed[-4:]
+
+            if state not in STATE_CODES or not suffix.isdigit():
+                return False
+
+            district_len = 0
+            while (
+                district_len < min(2, len(body))
+                and body[district_len].isdigit()
+            ):
+                district_len += 1
+
+            series = body[district_len:]
+
+            if (
+                district_len not in (1, 2)
+                or not (1 <= len(series) <= 3)
+                or not series.isalpha()
+            ):
+                return False
+
+        self.reads.append((fixed, float(conf), valid))
+
+        if len(self.reads) > self.max_reads:
+            self.reads.pop(0)
+        return True
+
+    def consensus(self):
+        """Return the strongest exact normalized registration, never a synthetic
+        plate assembled by mixing characters from different registrations."""
+        if not self.reads:
+            return None
+
+        valid_reads = [r for r in self.reads if r[2]]
+        pool = valid_reads if valid_reads else self.reads
+        grouped = {}
+        for text, conf, valid in pool:
+            item = grouped.setdefault(text, {"confs": [], "valid": valid})
+            item["confs"].append(float(conf))
+
+        # Weight support by both repeat count and OCR confidence. Stable sort
+        # makes ties deterministic; ties are still not enough to confirm.
+        text, item = max(
+            grouped.items(),
+            key=lambda pair: (
+                sum(pair[1]["confs"]),
+                len(pair[1]["confs"]),
+                pair[0],
+            ),
+        )
+        confs = item["confs"]
+        return Consensus(
+            text=text,
+            conf=sum(confs) / len(confs),
+            n_reads=len(confs),
+            valid=bool(item["valid"]),
+        )
+
+    def is_final(self, confirm_reads, confirm_conf):
+        # Confirm only a single normalized full registration supported by
+        # enough observations. Do not merge unrelated plates character-wise.
+        by_text = {}
+        for text, conf, valid in self.reads:
+            if valid:
+                by_text.setdefault(text, []).append(float(conf))
+
+        eligible = [
+            (plate, confs)
+            for plate, confs in by_text.items()
+            if len(confs) >= confirm_reads
+            and sum(confs) / len(confs) >= confirm_conf
+        ]
+
+        # Ambiguous competing registrations must never be auto-confirmed.
+        if len(eligible) != 1:
+            return False
+
+        return True
+
+
+def crop_quality(img_bgr, min_brightness=8.0, max_brightness=247.0,
+                min_contrast=5.0, min_laplacian_var=2.0):
+    """Conservative quality gate for vehicle crops passed to the plate detector.
+
+    Returns (accepted, metrics). Thresholds are configurable; this is a
+    rejection gate, not a claim that the crop contains a readable plate.
+    """
+    import cv2
+    import numpy as np
+
+    if img_bgr is None or not getattr(img_bgr, "size", 0):
+        return False, {"reason": "empty"}
+    if len(img_bgr.shape) < 2 or img_bgr.shape[0] < 16 or img_bgr.shape[1] < 16:
+        return False, {"reason": "too_small"}
+
+    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY) if len(img_bgr.shape) == 3 else img_bgr
+    brightness = float(np.mean(gray))
+    contrast = float(np.std(gray))
+    sharpness = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+    metrics = {
+        "brightness": round(brightness, 2),
+        "contrast": round(contrast, 2),
+        "laplacian_var": round(sharpness, 2),
+    }
+    if brightness < min_brightness or brightness > max_brightness:
+        metrics["reason"] = "brightness"
+        return False, metrics
+    if contrast < min_contrast:
+        metrics["reason"] = "contrast"
+        return False, metrics
+    if sharpness < min_laplacian_var:
+        metrics["reason"] = "blur"
+        return False, metrics
+    return True, metrics
+
+
+@dataclass
+class PlateRead:
+    text: str
+    conf: float
+    det_conf: float
+    bbox: tuple
+
+
+class PlateReader:
+    """Thin wrapper over fast-alpr (plate detector + OCR, ONNX, CPU)."""
+
+    def __init__(self, detector_model, ocr_model):
+        from fast_alpr import ALPR
+        self.alpr = ALPR(detector_model=detector_model, ocr_model=ocr_model)
+
+    def read(self, img_bgr):
+        out = []
+        for r in self.alpr.predict(img_bgr):
+            if r.ocr is None or not r.ocr.text:
+                continue
+            conf = r.ocr.confidence
+            if isinstance(conf, (list, tuple)):
+                conf = sum(conf) / max(len(conf), 1)
+            bb = r.detection.bounding_box
+            out.append(
+                PlateRead(
+                    r.ocr.text,
+                    float(conf),
+                    float(r.detection.confidence),
+                    (bb.x1, bb.y1, bb.x2, bb.y2),
+                )
+            )
+        return sorted(out, key=lambda p: p.conf * p.det_conf, reverse=True)
+
+
+class PlateWorker:
+    """Runs plate reading off the main loop so tracking never stalls."""
+
+    def __init__(self, reader):
+        self.reader = reader
+        self.jobs = queue.Queue(maxsize=2)
+        self.results = queue.Queue()
+        self._stop = threading.Event()
+        self._accepting = True
+        self._state_lock = threading.Lock()
+        self.last_ms = 0.0
+        self.thread = threading.Thread(target=self._run, daemon=False, name="plates")
+        self.thread.start()
+
+    def submit(self, key, crop):
+        with self._state_lock:
+            if not self._accepting:
+                return False
+            try:
+                self.jobs.put_nowait((key, crop, time.perf_counter()))
+                return True
+            except queue.Full:
+                return False
+
+    def _run(self):
+        while True:
+            try:
+                item = self.jobs.get(timeout=0.1)
+            except queue.Empty:
+                if self._stop.is_set():
+                    return
+                continue
+
+            try:
+                key, crop, queued_at = item
+                t0 = time.perf_counter()
+                log.info("OCR_QUEUE key=%s wait_ms=%.1f", key, (t0 - queued_at) * 1000)
+                try:
+                    reads = self.reader.read(crop)
+                    log.debug(
+                        "OCR_RESULT key=%s crop=%sx%s reads=%d %s",
+                        key,
+                        crop.shape[1],
+                        crop.shape[0],
+                        len(reads),
+                        [
+                            (r.text, round(r.conf, 3), round(r.det_conf, 3))
+                            for r in reads
+                        ],
+                    )
+                except Exception:
+                    log.exception("plate read failed")
+                    reads = []
+                self.last_ms = (time.perf_counter() - t0) * 1000
+                log.info("OCR_TIMING key=%s process_ms=%.1f", key, self.last_ms)
+                self.results.put((key, reads, crop))
+            finally:
+                self.jobs.task_done()
+
+    def poll(self):
+        out = []
+        while True:
+            try:
+                out.append(self.results.get_nowait())
+            except queue.Empty:
+                return out
+
+    def stop(self, wait=True, timeout=None):
+        """Stop accepting new jobs and optionally wait for queued jobs to finish."""
+        with self._state_lock:
+            self._accepting = False
+            self._stop.set()
+
+        if wait:
+            self.thread.join(timeout=timeout)
+            return not self.thread.is_alive()
+        return True
+
+========== s1\plate_crop.py ==========
+
+def cut_plate(crop, bbox, pad=0.2):
+    """Cut the plate region out of a vehicle crop. bbox = (x1, y1, x2, y2) in crop pixels."""
+    try:
+        x1, y1, x2, y2 = [float(v) for v in bbox]
+        h, w = crop.shape[:2]
+        px, py = (x2 - x1) * pad, (y2 - y1) * pad
+        a, b = int(max(0, x1 - px)), int(max(0, y1 - py))
+        c, d = int(min(w, x2 + px)), int(min(h, y2 + py))
+        if c - a < 8 or d - b < 4:
+            return None
+        return crop[b:d, a:c].copy()
+    except Exception:
+        return None
+
+
+========== s1\vehicles.py ==========
+
+import uuid
+from collections import Counter
+from dataclasses import dataclass, field
+
+import numpy as np
+
+from .attributes import TYPE_BY_COCO
+from .plates import PlateVoter
+
+
+@dataclass
+class PendingCross:
+    direction: str
+    event_time: float
+    deadline: float
+
+
+@dataclass
+class Vehicle:
+    uid: str
+    track_id: int
+    first_ts: float
+    cls_votes: Counter = field(default_factory=Counter)
+    color_votes: Counter = field(default_factory=Counter)
+    voter: PlateVoter = field(default_factory=PlateVoter)
+    plate_final: bool = False
+    plate_attempts: int = 0
+    plate_inflight: bool = False
+    plate_inflight_observation_id: object = None
+    last_plate_frame_idx: int = -1
+    last_plate_submit: float = 0.0
+    last_color_ts: float = 0.0
+    last_crop: object = None
+    pending: list = field(default_factory=list)
+    any_emitted: bool = False
+    emitted_plate: str = None
+    slot_id: str = None
+    has_parked: bool = False
+
+    # Last tracker observation, used only for safe identity recovery.
+    last_bbox: object = None
+    last_seen_ts: float = 0.0
+    pending_entry_received_at: float = None
+    pending_exit_crossing_ts: float = None
+
+    @property
+    def plate_status(self):
+        """Explicit externally useful state derived from current evidence."""
+        if self.plate_final:
+            return "CONFIRMED"
+        return "CANDIDATE" if self.voter.reads else "UNKNOWN"
+
+    def vehicle_type(self):
+        if not self.cls_votes:
+            return None
+        return TYPE_BY_COCO.get(
+            self.cls_votes.most_common(1)[0][0],
+            "vehicle",
+        )
+
+    def color(self):
+        return (
+            self.color_votes.most_common(1)[0][0]
+            if self.color_votes
+            else None
+        )
+
+
+class VehicleRegistry:
+    IDENTITY_RECOVERY_MAX_S = 5.0
+    IDENTITY_RECOVERY_MIN_IOU = 0.10
+    IDENTITY_RECOVERY_MAX_CENTER_DISTANCE = 0.45
+
+    def __init__(self):
+        self.by_track = {}
+        self.by_uid = {}
+
+    @staticmethod
+    def _iou(a, b):
+        if a is None or b is None:
+            return 0.0
+
+        ax1, ay1, ax2, ay2 = map(float, a)
+        bx1, by1, bx2, by2 = map(float, b)
+
+        ix1 = max(ax1, bx1)
+        iy1 = max(ay1, by1)
+        ix2 = min(ax2, bx2)
+        iy2 = min(ay2, by2)
+
+        iw = max(0.0, ix2 - ix1)
+        ih = max(0.0, iy2 - iy1)
+        inter = iw * ih
+
+        aa = max(0.0, ax2 - ax1) * max(0.0, ay2 - ay1)
+        ab = max(0.0, bx2 - bx1) * max(0.0, by2 - by1)
+
+        union = aa + ab - inter
+        if union <= 0.0:
+            return 0.0
+
+        return inter / union
+
+    @staticmethod
+    def _center_distance_ratio(a, b):
+        if a is None or b is None:
+            return float("inf")
+
+        ax1, ay1, ax2, ay2 = map(float, a)
+        bx1, by1, bx2, by2 = map(float, b)
+
+        acx = (ax1 + ax2) / 2.0
+        acy = (ay1 + ay2) / 2.0
+        bcx = (bx1 + bx2) / 2.0
+        bcy = (by1 + by2) / 2.0
+
+        distance = float(np.hypot(acx - bcx, acy - bcy))
+
+        aw = max(1.0, ax2 - ax1)
+        ah = max(1.0, ay2 - ay1)
+        bw = max(1.0, bx2 - bx1)
+        bh = max(1.0, by2 - by1)
+
+        scale = max(aw, ah, bw, bh)
+
+        return distance / scale
+
+    def _remember_observation(self, vehicle, track, ts):
+        vehicle.track_id = track.id
+        vehicle.last_bbox = np.asarray(track.bbox, dtype=float).copy()
+        vehicle.last_seen_ts = float(ts)
+
+    def _find_recoverable_vehicle(self, track, ts):
+        candidates = []
+
+        for vehicle in self.by_uid.values():
+            if not (vehicle.plate_final or vehicle.plate_inflight):
+                continue
+
+            if vehicle.slot_id is not None:
+                continue
+
+            if vehicle.track_id in self.by_track:
+                continue
+
+            if vehicle.last_bbox is None:
+                continue
+
+            age = float(ts) - float(vehicle.last_seen_ts)
+
+            if age < 0.0 or age > self.IDENTITY_RECOVERY_MAX_S:
+                continue
+
+            iou = self._iou(vehicle.last_bbox, track.bbox)
+            distance = self._center_distance_ratio(
+                vehicle.last_bbox,
+                track.bbox,
+            )
+
+            if (
+                iou >= self.IDENTITY_RECOVERY_MIN_IOU
+                or distance <= self.IDENTITY_RECOVERY_MAX_CENTER_DISTANCE
+            ):
+                candidates.append((iou, distance, age, vehicle))
+
+        if not candidates:
+            return None
+
+        # Prefer strongest spatial match, then newest observation.
+        candidates.sort(
+            key=lambda x: (-x[0], x[1], x[2])
+        )
+
+        best = candidates[0]
+
+        # Never recover if two retained identities are equally plausible.
+        if len(candidates) > 1:
+            second = candidates[1]
+
+            if (
+                abs(best[0] - second[0]) < 0.05
+                and abs(best[1] - second[1]) < 0.05
+            ):
+                return None
+
+        return best[3]
+
+    def get_or_create(self, track, ts):
+        v = self.by_track.get(track.id)
+
+        if v is not None:
+            self._remember_observation(v, track, ts)
+            return v
+
+        # A new tracker ID may actually be the same physical vehicle
+        # whose old tracker disappeared briefly.
+        recovered = self._find_recoverable_vehicle(track, ts)
+
+        print(
+            "IDENTITY_CHECK",
+            "new_track=", track.id,
+            "ts=", round(float(ts), 3),
+            "candidates=", [
+                (
+                    v.uid,
+                    v.track_id,
+                    v.plate_final,
+                    v.plate_inflight,
+                    round(float(ts) - float(v.last_seen_ts), 3),
+                )
+                for v in self.by_uid.values()
+                if v.plate_final or v.plate_inflight
+            ],
+            flush=True,
+        )
+
+        if recovered is not None:
+            old_track_id = recovered.track_id
+
+            self.by_track.pop(old_track_id, None)
+
+            recovered.track_id = track.id
+            self.by_track[track.id] = recovered
+            self.by_uid[recovered.uid] = recovered
+            self._remember_observation(recovered, track, ts)
+
+            return recovered
+
+        v = Vehicle(
+            uid=uuid.uuid4().hex,
+            track_id=track.id,
+            first_ts=ts,
+        )
+
+        self.by_track[track.id] = v
+        self.by_uid[v.uid] = v
+        self._remember_observation(v, track, ts)
+
+        return v
+
+    def rebind(self, track_id, vehicle):
+        dup = self.by_track.get(track_id)
+
+        if dup is not None and dup is not vehicle:
+            # Keep the UID addressable until its asynchronous OCR result
+            # returns. The active track is still rebound below.
+            if not dup.plate_inflight:
+                self.by_uid.pop(dup.uid, None)
+
+        vehicle.track_id = track_id
+        self.by_track[track_id] = vehicle
+        self.by_uid[vehicle.uid] = vehicle
+
+    def drop_track(self, track_id):
+        v = self.by_track.pop(track_id, None)
+
+        if v is not None:
+            # Keep identities while OCR is still in flight so the
+            # asynchronous OCR result can update the original Vehicle.
+            # Also keep finalized identities for short tracker-ID recovery.
+            if v.plate_inflight or v.plate_final:
+                return v
+
+            if v.slot_id is None:
+                self.by_uid.pop(v.uid, None)
+
+        return v
+
+    def release(self, vehicle):
+        # Preserve identity until any submitted asynchronous OCR job returns.
+        # Keep slot-associated vehicles available for lifecycle processing.
+        if vehicle.plate_inflight or vehicle.slot_id is not None:
+            return
+        self.by_uid.pop(vehicle.uid, None)
+
+
+========== s1\logic.py ==========
+
+import math
+from dataclasses import dataclass
+
+import cv2
+import numpy as np
+
+import logging
+log = logging.getLogger(__name__)
+from .geometry import signed_distance
+
+def still_run_start(hist, still_frac):
+    """Return the start time of the current stationary run."""
+    if not hist:
+        return 0.0
+
+    latest_ts, latest_x, latest_y, latest_w = hist[-1]
+    tolerance = float(still_frac) * max(float(latest_w), 1.0)
+    start_ts = latest_ts
+
+    for sample in reversed(hist):
+        sample_ts, sample_x, sample_y, _ = sample
+
+        if math.hypot(
+            float(sample_x) - float(latest_x),
+            float(sample_y) - float(latest_y),
+        ) > tolerance:
+            break
+
+        start_ts = sample_ts
+
+    return float(start_ts)
+
+
+class Tripwire:
+    """Classify crossings using apparent vehicle-size change when supplied.
+
+    Growing apparent size indicates entry; shrinking size indicates
+    exit. If size evidence is inconclusive, no direction is emitted.
+    Calls without size retain the positional legacy behavior for compatibility.
+    """
+
+    def __init__(
+        self,
+        p1,
+        p2,
+        inside_point,
+        margin_px=12.0,
+        size_samples=3,
+        min_size_change=0.15,
+    ):
+        self.p1, self.p2, self.margin = p1, p2, float(margin_px)
+        self.inside_side = (
+            1 if signed_distance(p1, p2, *inside_point) > 0 else -1
+        )
+        self.size_samples = max(2, int(size_samples))
+        self.min_size_change = max(0.0, float(min_size_change))
+        self.state = {}
+
+    def _new_state(self):
+        return {
+            "side": 0,
+            "last_d": None,
+            "last_ts": None,
+            "sizes": [],
+            "candidate": None,
+        }
+
+    def update(self, tid, x, y, ts, size=None):
+        d = signed_distance(self.p1, self.p2, x, y)
+        st = self.state.setdefault(tid, self._new_state())
+
+        if size is None:
+            old_d, old_ts = st["last_d"], st["last_ts"]
+            st["last_d"], st["last_ts"] = d, ts
+
+            side = (
+                1
+                if d > self.margin
+                else (-1 if d < -self.margin else 0)
+            )
+
+            if not side:
+                return None
+
+            previous = st["side"]
+            st["side"] = side
+
+            if previous and previous != side:
+                cross_ts = ts
+
+                if (
+                    old_d is not None
+                    and old_ts is not None
+                    and old_d != d
+                ):
+                    cross_ts = (
+                        old_ts
+                        + old_d / (old_d - d) * (ts - old_ts)
+                    )
+
+                return (
+                    "entry" if side == self.inside_side else "exit",
+                    cross_ts,
+                )
+
+            return None
+
+        size = float(size)
+
+        if size > 0:
+            st["sizes"].append((float(ts), size))
+            st["sizes"] = st["sizes"][-120:]
+
+        candidate = st["candidate"]
+
+        if candidate is not None and ts > candidate["cross_ts"] and size > 0:
+            candidate["after"].append(size)
+
+            if len(candidate["after"]) >= self.size_samples:
+                st["candidate"] = None
+
+                before = candidate["before"]
+                after = candidate["after"][: self.size_samples]
+
+                if len(before) < self.size_samples:
+                    st["last_d"], st["last_ts"] = d, ts
+                    return None
+
+                before_size = float(np.median(before))
+                after_size = float(np.median(after))
+
+                change = (
+                    (after_size - before_size) / before_size
+                    if before_size > 0
+                    else 0.0
+                )
+
+                st["last_d"], st["last_ts"] = d, ts
+
+                if abs(change) >= self.min_size_change:
+                    return candidate["direction"], candidate["cross_ts"]
+
+
+                return None
+
+        side = (
+            1
+            if d > self.margin
+            else (-1 if d < -self.margin else 0)
+        )
+
+        if side:
+            previous = st["side"]
+            st["side"] = side
+
+            if previous and previous != side:
+                old_d, old_ts = st["last_d"], st["last_ts"]
+                cross_ts = ts
+
+                if (
+                    old_d is not None
+                    and old_ts is not None
+                    and old_d != d
+                ):
+                    cross_ts = (
+                        old_ts
+                        + old_d / (old_d - d) * (ts - old_ts)
+                    )
+
+                before = [
+                    sz
+                    for sample_ts, sz in st["sizes"]
+                    if sample_ts < cross_ts
+                ]
+
+                st["candidate"] = {
+                    "cross_ts": cross_ts,
+                    "before": before[-self.size_samples :],
+                    "after": [],
+                    "direction": "entry" if side == self.inside_side else "exit",
+                }
+
+        st["last_d"], st["last_ts"] = d, ts
+        if st["candidate"] is not None:
+            log.debug(
+                "TRIPWIRE_CANDIDATE tid=%s cross_ts=%.3f before=%s after=%s",
+                tid,
+                st["candidate"]["cross_ts"],
+                st["candidate"]["before"],
+                st["candidate"]["after"],
+            )
+        return None
+
+    def forget(self, tid):
+        self.state.pop(tid, None)
+
+
+@dataclass
+class Occupant:
+    vehicle: object
+    track_id: object
+    parked_at: float
+    last_seen: float
+    lost_since: object = None
+    baseline: bool = False
+
+
+class SlotManager:
+    """Predefined bays -> PARK_START / PARK_END per vehicle.
+
+    PARKED  = footprint inside a bay polygon AND stationary for park_dwell_s.
+              Event time is BACKDATED to when the vehicle actually stopped.
+    LEFT    = out of the bay / moved away for leave_dwell_s.
+              Event time is BACKDATED to the last moment it was at rest in the bay.
+    If a parked vehicle's track is lost (occlusion), the bay is held for
+    lost_grace_s and a new stationary track in the same bay inherits the identity.
+    """
+
+    def __init__(self, slots, frame_size, cfg):
+        w, h = int(frame_size[0]), int(frame_size[1])
+        self.w, self.h, self.cfg = w, h, cfg
+        self.slots = {}
+
+        for s in slots:
+            mask = np.zeros((h, w), np.uint8)
+            cv2.fillPoly(
+                mask,
+                [np.array(s["polygon"], np.int32)],
+                1,
+            )
+
+            self.slots[s["slot_id"]] = {
+                "slot_id": s["slot_id"],
+                "level": s.get("level"),
+                "mask": mask,
+            }
+
+        self.tstate = {}
+        self.occupants = {}
+        self.stream_start_ts = None
+
+    def slot_info(self, sid):
+        s = self.slots[sid]
+        return {
+            "slot_id": sid,
+            "level": s["level"],
+        }
+
+    def overlaps(self, bbox):
+        x1, y1, x2, y2 = bbox
+
+        fy1 = y2 - self.cfg["footprint_frac"] * (y2 - y1)
+
+        rx1 = int(max(0, x1))
+        rx2 = int(min(self.w, math.ceil(x2)))
+        ry1 = int(max(0, fy1))
+        ry2 = int(min(self.h, math.ceil(y2)))
+
+        area = (rx2 - rx1) * (ry2 - ry1)
+
+        if area <= 0:
+            return {}
+
+        return {
+            sid: cv2.countNonZero(
+                s["mask"][ry1:ry2, rx1:rx2]
+            ) / area
+            for sid, s in self.slots.items()
+        }
+
+
+    def contact_slot(self, bbox):
+        """Return the bay containing the vehicle's bottom-centre point."""
+        x1, y1, x2, y2 = bbox
+        px = int(round((x1 + x2) / 2.0))
+        py = int(round(y2 - 2))
+        px = max(0, min(self.w - 1, px))
+        py = max(0, min(self.h - 1, py))
+
+        candidates = []
+        for sid, slot in self.slots.items():
+            if slot["mask"][py, px] > 0:
+                candidates.append(sid)
+
+        return candidates[0] if len(candidates) == 1 else None
+
+    def recover_lost_track(self, track, ts, registry):
+        """Recover a parked vehicle's identity before tripwire processing.
+
+        When a parked vehicle temporarily loses its tracker ID, the old
+        Vehicle object remains attached to its occupied slot. If a new
+        tracker ID appears again inside that same occupied slot while the
+        old occupant is still within the lost grace period, restore the
+        old Vehicle identity before any ENTRY/EXIT event is generated.
+
+        Returns True when a recovery was performed.
+        """
+
+        ov = self.overlaps(track.bbox)
+
+        if not ov:
+            return False
+
+        sid, frac = max(
+            ov.items(),
+            key=lambda kv: kv[1],
+        )
+
+        if frac < self.cfg["min_overlap"]:
+            return False
+
+        occ = self.occupants.get(sid)
+
+        if occ is None:
+            return False
+
+        if occ.track_id is not None:
+            return False
+
+        if occ.lost_since is None:
+            return False
+
+        if (
+            ts - occ.lost_since
+            >= self.cfg["lost_grace_s"]
+        ):
+            return False
+
+        vehicle = occ.vehicle
+
+        # Rebind the new tracker ID to the original Vehicle object.
+        registry.rebind(track.id, vehicle)
+
+        # Treat the recovered track as already occupying this slot.
+        hist = track.history
+
+        if hist:
+            cx = hist[-1][1]
+            cy = hist[-1][2]
+        else:
+            x1, y1, x2, y2 = track.bbox
+            cx = (x1 + x2) / 2.0
+            cy = y2
+
+        self.tstate[track.id] = {
+            "slot": sid,
+            "anchor": (cx, cy),
+            "depart_since": None,
+        }
+
+        occ.track_id = track.id
+        occ.lost_since = None
+        occ.last_seen = ts
+
+        return True
+
+    def update(self, tracks, ts, registry):
+        """Returns list of (event_type, vehicle, event_time, slot_id, inferred)."""
+        c, events = self.cfg, []
+
+        if self.stream_start_ts is None:
+            self.stream_start_ts = float(ts)
+
+        for t in tracks:
+            st = self.tstate.setdefault(
+                t.id,
+                {
+                    "slot": None,
+                    "candidate_slot": None,
+                    "candidate_since": None,
+                    "anchor": None,
+                    "depart_since": None,
+                    "baseline_slot": None,
+                    "baseline_frac": 0.0,
+                },
+            )
+
+            hist = t.history
+            cx, cy, w = (
+                hist[-1][1],
+                hist[-1][2],
+                hist[-1][3],
+            )
+
+            ov = self.overlaps(t.bbox)
+
+            if st["slot"] is None:
+                # Prefer the bottom-centre contact point when it identifies
+                # a plausible bay, but allow overlap-based selection when
+                # detector-box jitter puts the contact point outside.
+                min_overlap = float(c["min_overlap"])
+                qualified = {
+                    slot_id: overlap
+                    for slot_id, overlap in ov.items()
+                    if overlap >= min_overlap
+                }
+
+                if not qualified:
+                    st["candidate_slot"] = None
+                    st["candidate_since"] = None
+                    continue
+
+                best_sid, best_frac = max(
+                    qualified.items(),
+                    key=lambda item: item[1],
+                )
+                contact_sid = self.contact_slot(t.bbox)
+                switch_margin = float(c.get("slot_switch_margin", 0.12))
+
+                if (
+                    contact_sid in qualified
+                    and qualified[contact_sid] >= best_frac - switch_margin
+                ):
+                    proposed_sid = contact_sid
+                else:
+                    ranked = sorted(
+                        qualified.items(),
+                        key=lambda item: item[1],
+                        reverse=True,
+                    )
+                    ambiguity_margin = float(
+                        c.get("slot_ambiguity_margin", 0.08)
+                    )
+                    if (
+                        contact_sid is None
+                        and len(ranked) > 1
+                        and ranked[0][1] - ranked[1][1] < ambiguity_margin
+                    ):
+                        log.debug(
+                            "SLOT_CANDIDATE_AMBIGUOUS track=%s candidates=%s",
+                            t.id, ranked[:2],
+                        )
+                        st["candidate_slot"] = None
+                        st["candidate_since"] = None
+                        continue
+                    proposed_sid = best_sid
+
+                candidate = st.get("candidate_slot")
+                if candidate != proposed_sid:
+                    st["candidate_slot"] = proposed_sid
+                    st["candidate_since"] = ts
+
+                sid = proposed_sid
+                frac = qualified[sid]
+
+                start = still_run_start(
+                    hist,
+                    c["still_frac"],
+                )
+
+                # Baseline EXIT clip: the stream begins with a vehicle
+                # already parked. Do not require the normal parking dwell.
+                baseline_window = 2.0
+                baseline_candidate = (
+                    self.stream_start_ts is not None
+                    and ts - self.stream_start_ts <= baseline_window
+                )
+
+                if baseline_candidate:
+                    if frac < 0.20:
+                        continue
+
+                    # Remember the strongest slot observed during the
+                    # opening baseline window.
+                    if frac > st.get("baseline_frac", 0.0):
+                        st["baseline_frac"] = frac
+                        st["baseline_slot"] = sid
+
+                    continue
+
+                # After the opening baseline window, register the remembered
+                # occupant immediately. Normal arriving vehicles still use
+                # the existing 4-second dwell path.
+                if st.get("baseline_slot") is not None:
+                    sid = st["baseline_slot"]
+                    frac = st["baseline_frac"]
+                    st["baseline_slot"] = None
+                    st["baseline_frac"] = 0.0
+                    baseline_candidate = True
+                else:
+                    baseline_candidate = False
+
+                if not baseline_candidate:
+                    if frac < float(c["min_overlap"]):
+                        log.debug(
+                            "PARK_START_WAIT track=%s slot=%s reason=overlap "
+                            "overlap=%.3f required=%.3f",
+                            t.id, sid, frac, float(c["min_overlap"]),
+                        )
+                        continue
+
+                    # Use time associated with the current parking slot.
+                    # This avoids resetting the dwell timer when detector
+                    # bounding boxes jitter slightly between frames.
+                    candidate_since = st.get("candidate_since")
+                    slot_dwell_start = (
+                        candidate_since if candidate_since is not None else start
+                    )
+                    slot_dwell = max(0.0, ts - slot_dwell_start)
+
+                    if slot_dwell < c["park_dwell_s"]:
+                        log.debug(
+                            "PARK_START_WAIT track=%s slot=%s reason=slot_dwell "
+                            "overlap=%.3f dwell=%.2fs required=%.2fs history=%d",
+                            t.id, sid, frac, slot_dwell,
+                            float(c["park_dwell_s"]), len(hist),
+                        )
+                        continue
+
+                occ = self.occupants.get(sid)
+
+                if occ is not None and occ.track_id is None:
+                    # Lost vehicle reacquired: preserve its identity.
+                    registry.rebind(t.id, occ.vehicle)
+
+                    occ.track_id = t.id
+                    occ.lost_since = None
+                    occ.last_seen = ts
+
+                    st.update(
+                        slot=sid,
+                        anchor=(cx, cy),
+                        depart_since=None,
+                    )
+
+                elif occ is not None:
+                    continue
+
+                else:
+                    v = registry.by_track[t.id]
+
+                    baseline_window = max(
+                        0.0,
+                        float(c.get("baseline_window_s", 2.0)),
+                    )
+                    is_baseline = (
+                        self.stream_start_ts is not None
+                        and start >= self.stream_start_ts
+                        and start - self.stream_start_ts <= baseline_window
+                    )
+                    self.occupants[sid] = Occupant(
+                        v,
+                        t.id,
+                        start,
+                        ts,
+                        baseline=is_baseline,
+                    )
+
+                    v.slot_id = sid
+
+                    st.update(
+                        slot=sid,
+                        anchor=(cx, cy),
+                        depart_since=None,
+                    )
+
+                    if is_baseline:
+                        log.info(
+                            "BASELINE_OCCUPANT slot=%s vehicle=%s "
+                            "parked_at=%.3f; ENTRY suppressed",
+                            sid,
+                            v.uid,
+                            start,
+                        )
+                    else:
+                        events.append(
+                            (
+                                "PARK_START",
+                                v,
+                                start,
+                                sid,
+                                False,
+                            )
+                        )
+
+            else:
+                sid = st["slot"]
+                occ = self.occupants[sid]
+
+                occ.last_seen = ts
+
+                ax, ay = st["anchor"]
+
+                moved = (
+                    math.hypot(cx - ax, cy - ay)
+                    > c["moved_frac"] * w
+                )
+
+                leaving = (
+                    ov.get(sid, 0.0) < c["leave_overlap"]
+                )
+
+                if not leaving:
+                    st["depart_since"] = None
+                    continue
+
+                if st["depart_since"] is None:
+                    st["depart_since"] = ts
+
+
+                if (
+                    ts - st["depart_since"]
+                    >= c["leave_dwell_s"]
+                ):
+                    last_rest = st["depart_since"]
+
+                    for hts, hx, hy, _ in reversed(hist):
+                        if (
+                            math.hypot(hx - ax, hy - ay)
+                            <= c["still_frac"] * w
+                        ):
+                            last_rest = hts
+                            break
+
+                    events.append(
+                        (
+                            "PARK_END",
+                            occ.vehicle,
+                            last_rest,
+                            sid,
+                            False,
+                        )
+                    )
+
+                    occ.vehicle.slot_id = None
+                    del self.occupants[sid]
+
+                    st.update(
+                        slot=None,
+                        anchor=None,
+                        depart_since=None,
+                    )
+
+        events += self.expire(ts)
+        return events
+
+    def on_track_removed(self, track):
+        st = self.tstate.pop(track.id, None)
+
+        if st and st["slot"]:
+            occ = self.occupants.get(st["slot"])
+
+            if occ and occ.track_id == track.id:
+                occ.track_id = None
+                occ.lost_since = occ.last_seen
+
+    def expire(self, ts):
+        events = []
+
+        for sid, occ in list(self.occupants.items()):
+            if (
+                occ.track_id is None
+                and ts - occ.lost_since
+                >= self.cfg["lost_grace_s"]
+            ):
+                events.append(
+                    (
+                        "PARK_END",
+                        occ.vehicle,
+                        occ.lost_since,
+                        sid,
+                        True,
+                    )
+                )
+
+                occ.vehicle.slot_id = None
+                del self.occupants[sid]
+
+        return events
+
+
+
+
+
+
+========== s1\events.py ==========
+
+import uuid
+
+from .common import iso
+
+SCHEMA_VERSION = 1
+
+
+def build_event(
+    etype,
+    vehicle,
+    camera_id,
+    event_time,
+    detected_at,
+    direction=None,
+    slot=None,
+    snapshot_uri=None,
+    inferred=False,
+    captured_at=None,
+    received_at=None,
+    parking_area_id=None,
+    plate_snapshot_uri=None,
+):
+    c = vehicle.voter.consensus()
+
+    plate_text = None
+    plate_confidence = None
+
+    if c:
+        plate_text = c.text
+        plate_confidence = round(c.conf, 3)
+
+    event_time_iso = iso(event_time)
+    detected_at_iso = iso(detected_at)
+    captured_at_iso = iso(captured_at) if captured_at is not None else None
+    received_at_iso = iso(received_at) if received_at is not None else None
+
+    parking = None
+    bay = None
+
+    if slot:
+        slot_id = slot.get("slot_id")
+        level = slot.get("level")
+
+        parking = {
+            "slot_id": slot_id,
+            "slot_confidence": None,
+        }
+        bay = {
+            "id": slot_id,
+            "level": level,
+        }
+
+    snapshot = None
+    if snapshot_uri or plate_snapshot_uri:
+        snapshot = {
+            "vehicle": snapshot_uri,
+            "plate": plate_snapshot_uri,
+        }
+
+    vehicle_type = vehicle.vehicle_type()
+    vehicle_color = vehicle.color()
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "event_id": uuid.uuid4().hex,
+        "event_type": etype,
+        "camera_id": camera_id,
+        "parking_area_id": parking_area_id,
+        "vehicle_uid": vehicle.uid,
+        "track_id": vehicle.track_id,
+        "timestamp": event_time_iso,
+        "event_time": event_time_iso,
+        "detected_at": detected_at_iso,
+        "received_at": received_at_iso,
+        "captured_at": captured_at_iso,
+        "direction": direction,
+        "inferred": bool(inferred),
+        "vehicle": {
+            "type": vehicle_type,
+            "type_confidence": None,
+            "color": vehicle_color,
+            "color_confidence": None,
+            "plate": plate_text,
+            "plate_confidence": plate_confidence,
+        },
+        "vehicle_details": {
+            "type": vehicle_type,
+            "type_confidence": None,
+            "color": vehicle_color,
+            "color_confidence": None,
+            "plate": plate_text,
+            "plate_confidence": plate_confidence,
+        },
+        "plate": {
+            "text": plate_text,
+            "confidence": plate_confidence,
+        },
+        "bay": bay,
+        "parking": parking,
+        "snapshot": snapshot,
+    }
+
+
+========== s1\tracker.py ==========
+
+
+from collections import Counter, deque
+
+import numpy as np
+from scipy.optimize import linear_sum_assignment
+
+HISTORY_S = 120.0
+
+
+def iou_matrix(a, b):
+    if len(a) == 0 or len(b) == 0:
+        return np.zeros((len(a), len(b)))
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    ix1 = np.maximum(a[:, None, 0], b[None, :, 0])
+    iy1 = np.maximum(a[:, None, 1], b[None, :, 1])
+    ix2 = np.minimum(a[:, None, 2], b[None, :, 2])
+    iy2 = np.minimum(a[:, None, 3], b[None, :, 3])
+    inter = np.clip(ix2 - ix1, 0, None) * np.clip(iy2 - iy1, 0, None)
+    aa = (a[:, 2] - a[:, 0]) * (a[:, 3] - a[:, 1])
+    ab = (b[:, 2] - b[:, 0]) * (b[:, 3] - b[:, 1])
+    return inter / (aa[:, None] + ab[None, :] - inter + 1e-9)
+
+
+class Track:
+    def __init__(self, tid, bbox, score, cls, ts):
+        self.id = tid
+        self.bbox = np.array(bbox, float)
+        self.score = float(score)
+        self.cls = int(cls)
+        self.cls_votes = Counter({int(cls): 1})
+        self.first_ts = self.last_ts = ts
+        self.hits = 1
+        self.vel = np.zeros(2)  # centre velocity, px/s
+
+        # Existing history format is preserved for SlotManager.
+        self.history = deque()  # (ts, cx, bottom_y, width)
+
+        # New independent history for apparent-size direction detection.
+        # Entries: (ts, width, height, area)
+        self.size_history = deque()
+
+        self.confirmed = False
+        self._push(ts)
+
+    def _push(self, ts):
+        x1, y1, x2, y2 = self.bbox
+        width = max(0.0, float(x2 - x1))
+        height = max(0.0, float(y2 - y1))
+
+        self.history.append(
+            (ts, (x1 + x2) / 2, y2, width)
+        )
+        self.size_history.append(
+            (ts, width, height, width * height)
+        )
+
+        while self.history and ts - self.history[0][0] > HISTORY_S:
+            self.history.popleft()
+
+        while self.size_history and ts - self.size_history[0][0] > HISTORY_S:
+            self.size_history.popleft()
+
+    def predict(self, ts):
+        dt = min(max(ts - self.last_ts, 0.0), 1.0)
+        sx, sy = self.vel * dt
+        return self.bbox + np.array([sx, sy, sx, sy])
+
+    def update(self, bbox, score, cls, ts):
+        dt = max(ts - self.last_ts, 1e-3)
+        old_c = np.array([
+            (self.bbox[0] + self.bbox[2]) / 2,
+            (self.bbox[1] + self.bbox[3]) / 2,
+        ])
+        new_c = np.array([
+            (bbox[0] + bbox[2]) / 2,
+            (bbox[1] + bbox[3]) / 2,
+        ])
+        self.vel = 0.6 * self.vel + 0.4 * (new_c - old_c) / dt
+        self.bbox = np.array(bbox, float)
+        self.score = float(score)
+        self.cls = int(cls)
+        self.cls_votes[int(cls)] += 1
+        self.last_ts = ts
+        self.hits += 1
+        self._push(ts)
+
+    @property
+    def major_cls(self):
+        return self.cls_votes.most_common(1)[0][0]
+
+
+class ByteTracker:
+    """ByteTrack-style two-stage association (high then low confidence
+    detections) with constant-velocity prediction, IoU + Hungarian matching.
+    Time-based (seconds), so it behaves the same at 3 fps or 10 fps."""
+
+    def __init__(self, high_thr=0.45, low_thr=0.15, match_iou=0.25,
+                 low_match_iou=0.15, max_age_s=2.0, min_hits=3):
+        self.high_thr, self.low_thr = high_thr, low_thr
+        self.match_iou, self.low_match_iou = match_iou, low_match_iou
+        self.max_age_s, self.min_hits = max_age_s, min_hits
+        self.tracks = []
+        self._next = 1
+
+    def _associate(self, preds, tidx, dets, thr):
+        if not tidx or len(dets) == 0:
+            return [], list(tidx), list(range(len(dets)))
+        iou = iou_matrix(preds[tidx], dets[:, :4])
+        rows, cols = linear_sum_assignment(1.0 - iou)
+        matches, mt, md = [], set(), set()
+        for r, c in zip(rows, cols):
+            if iou[r, c] >= thr:
+                matches.append((tidx[r], c))
+                mt.add(tidx[r])
+                md.add(c)
+        return (
+            matches,
+            [t for t in tidx if t not in mt],
+            [d for d in range(len(dets)) if d not in md],
+        )
+
+    def update(self, dets, ts):
+        dets = (
+            np.zeros((0, 6))
+            if dets is None or len(dets) == 0
+            else np.asarray(dets, float)
+        )
+        high = dets[dets[:, 4] >= self.high_thr]
+        low = dets[
+            (dets[:, 4] >= self.low_thr)
+            & (dets[:, 4] < self.high_thr)
+        ]
+        preds = (
+            np.array([t.predict(ts) for t in self.tracks])
+            if self.tracks else np.zeros((0, 4))
+        )
+
+        m1, un_t, un_d = self._associate(
+            preds, list(range(len(self.tracks))), high, self.match_iou
+        )
+        for ti, di in m1:
+            d = high[di]
+            self.tracks[ti].update(d[:4], d[4], d[5], ts)
+
+        recent = [
+            t for t in un_t
+            if ts - self.tracks[t].last_ts <= 1.0
+        ]
+        m2, _, _ = self._associate(
+            preds, recent, low, self.low_match_iou
+        )
+        for ti, di in m2:
+            d = low[di]
+            self.tracks[ti].update(d[:4], d[4], d[5], ts)
+
+        for di in un_d:
+            d = high[di]
+            self.tracks.append(
+                Track(self._next, d[:4], d[4], d[5], ts)
+            )
+            self._next += 1
+
+        for t in self.tracks:
+            if not t.confirmed and t.hits >= self.min_hits:
+                t.confirmed = True
+
+        removed, alive = [], []
+        for t in self.tracks:
+            if ts - t.last_ts > self.max_age_s:
+                if t.confirmed:
+                    removed.append(t)
+            else:
+                alive.append(t)
+        self.tracks = alive
+        active = [
+            t for t in self.tracks
+            if t.last_ts == ts and t.confirmed
+        ]
+        return active, removed
+
+========== s1\main.py ==========
+
+import argparse
+import json
+import logging
+import time
+from collections import Counter
+
+import cv2
+
+from .config import load_config
+from .yolo_detector import YoloDetector
+from .geometry import Geometry
+from .grabber import open_source
+from .outbox import Outbox
+from .pipeline import Pipeline
+from .s2_mapper import S2Mapper
+from .uploader import UploadingOutbox
+from .plates import PlateReader, PlateWorker
+
+log = logging.getLogger("main")
+
+
+class MemoryPublisher:
+    local_preview = True
+    """In-memory publisher for local video testing.
+
+    This deliberately does not contact Service 2 and does not write to
+    data/outbox.db. It provides the small publisher interface Pipeline needs.
+    """
+
+    def __init__(self):
+        self.pending_events = {}
+
+    def publish(self, event):
+        """Print the outgoing event payload locally; never contact Service 2."""
+        print(
+            "\n========== SERVICE 2 JSON PREVIEW (NOT SENT) ==========",
+            flush=True,
+        )
+        print(
+            json.dumps(event, indent=2, ensure_ascii=False, default=str),
+            flush=True,
+        )
+        print("========== END JSON PREVIEW ===========================\n", flush=True)
+
+    def save_pending_event(self, event_key, payload):
+        self.pending_events[event_key] = payload
+
+    def load_pending_events(self):
+        return list(self.pending_events.items())
+
+    def delete_pending_event(self, event_key):
+        self.pending_events.pop(event_key, None)
+
+    def stop(self, wait=True, timeout=5.0):
+        return True
+
+
+def run(
+    cfg,
+    show=False,
+    detector=None,
+    publisher=None,
+    plate_worker=None,
+    source=None,
+    no_publisher=False,
+):
+    source = source or open_source(cfg)
+
+    first = None
+    while first is None:
+        first = source.read(-1, timeout=2.0)
+        if first is None and getattr(source, "eof", False):
+            raise SystemExit("could not read any frame from the source")
+        if first is None:
+            log.info("waiting for first frame...")
+
+    H, W = first.image.shape[:2]
+    log.info("source ready: %dx%d", W, H)
+
+    d = cfg["detector"]
+    detector = detector or YoloDetector(
+        d["model_path"],
+        d["input_size"],
+        d["score_thr"],
+        d["nms_thr"],
+        d["classes"],
+        d["threads"],
+    )
+
+    publisher_was_created = publisher is None
+
+    if publisher_was_created:
+        if no_publisher:
+            publisher = MemoryPublisher()
+            log.info(
+                "LOCAL TEST MODE: publisher disabled; "
+                "events will not be sent to Service 2"
+            )
+        else:
+            publisher = S2Mapper(
+                UploadingOutbox(
+                    cfg["publisher"]["outbox_db"],
+                    cfg["publisher"]["s2_url"],
+                    timeout=30.0,
+                )
+            )
+
+    if plate_worker is None and cfg["plate"]["enabled"]:
+        p = cfg["plate"]
+        plate_worker = PlateWorker(
+            PlateReader(p["detector_model"], p["ocr_model"])
+        )
+
+    geometry = Geometry.load(cfg["geometry_file"])
+    pipe = Pipeline(
+        cfg,
+        geometry,
+        (W, H),
+        detector,
+        publisher,
+        plate_worker,
+    )
+
+    min_dt = 1.0 / d["max_fps"]
+    last_proc_ts, last_idx, last_report = (
+        -1e18,
+        first.idx - 1,
+        time.time(),
+    )
+    frame = first
+    event_counts = Counter()
+
+    try:
+        while frame is not None:
+            last_idx = frame.idx
+
+            if frame.ts - last_proc_ts >= min_dt * 0.9:
+                last_proc_ts = frame.ts
+
+                for ev in pipe.process(frame):
+                    event_type = ev["event_type"]
+                    event_counts[event_type] += 1
+
+                    log.info(
+                        "%s %s plate=%s bay=%s t=%s",
+                        event_type,
+                        ev.get("direction") or "",
+                        (ev.get("plate") or {}).get("text"),
+                        (ev.get("bay") or {}).get("id"),
+                        ev.get("event_time"),
+                    )
+
+                if show:
+                    cv2.imshow(
+                        "garage-s1",
+                        pipe.draw(frame.image.copy()),
+                    )
+
+                    if cv2.waitKey(1) & 0xFF == ord("q"):
+                        break
+
+            if time.time() - last_report > 5:
+                log.info(pipe.stats.summary())
+                last_report = time.time()
+
+            frame = source.read(last_idx, timeout=1.0)
+
+            if frame is None and not getattr(source, "eof", False):
+                log.warning("no new frame for 1s (camera stalled?)")
+                frame = source.read(last_idx, timeout=5.0)
+
+    except KeyboardInterrupt:
+        pass
+
+    finally:
+        try:
+            source.stop()
+        except Exception:
+            log.exception("failed to stop source")
+
+        try:
+            if plate_worker is not None:
+                stopped = plate_worker.stop(wait=True)
+
+                if not stopped:
+                    log.error(
+                        "plate worker did not stop; "
+                        "OCR results may be incomplete"
+                    )
+
+        except Exception:
+            log.exception("failed to stop plate worker")
+
+        try:
+            flushed_events = pipe.flush(time.time())
+            for ev in flushed_events:
+                event_type = ev["event_type"]
+                event_counts[event_type] += 1
+                log.info(
+                    "%s %s plate=%s bay=%s t=%s",
+                    event_type,
+                    ev.get("direction") or "",
+                    (ev.get("plate") or {}).get("text"),
+                    (ev.get("bay") or {}).get("id"),
+                    ev.get("event_time"),
+                )
+
+            log.info(
+                "EVENT SUMMARY: ENTRY=%d PARK_START=%d PARK_END=%d EXIT=%d TOTAL=%d",
+                event_counts["ENTRY"],
+                event_counts["PARK_START"],
+                event_counts["PARK_END"],
+                event_counts["EXIT"],
+                sum(event_counts.values()),
+            )
+
+        except Exception:
+            log.exception("pipeline flush failed")
+
+        if publisher_was_created:
+            try:
+                stopped = publisher.stop(wait=True)
+
+                if not stopped:
+                    log.error(
+                        "publisher did not stop; "
+                        "delivery may continue in the background"
+                    )
+
+            except Exception:
+                log.exception("failed to stop publisher")
+
+        log.info(pipe.stats.summary())
+
+
+def cli():
+    ap = argparse.ArgumentParser(
+        description="Garage vision service (S1)"
+    )
+
+    ap.add_argument(
+        "--config",
+        default="config/config.yaml",
+    )
+
+    ap.add_argument(
+        "--source",
+        help="video file or rtsp:// URL (overrides config)",
+    )
+
+    ap.add_argument(
+        "--replay",
+        choices=["realtime", "sync"],
+        help="file replay mode",
+    )
+
+    ap.add_argument(
+        "--show",
+        action="store_true",
+        help="show debug window (press q to quit)",
+    )
+
+    ap.add_argument(
+        "--no-plates",
+        action="store_true",
+        help="disable plate reading (speed test)",
+    )
+
+    ap.add_argument(
+        "--no-publisher",
+        action="store_true",
+        help="disable Service 2 publishing for local video testing",
+    )
+
+    a = ap.parse_args()
+
+    over = {}
+
+    if a.source:
+        over["source"] = a.source
+
+    if a.replay:
+        over["replay"] = a.replay
+
+    if a.no_plates:
+        over["plate"] = {"enabled": False}
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
+    run(
+        load_config(a.config, over),
+        show=a.show,
+        no_publisher=a.no_publisher,
+    )
+
+
+if __name__ == "__main__":
+    cli()
+
+
+========== config\config.yaml ==========
+
+# Only keys you want to change need to be here; everything else has defaults (s1/config.py).
+camera_id: CAM-01
+parking_area_id: AREA-01
+source: sample.mp4            # video file for tuning, or rtsp://user:pass@192.168.1.10:554/stream
+replay: realtime              # realtime = drops frames like a live camera; sync = every frame
+geometry_file: data/geometry_vn20261005.json
+
+detector:
+  model_path: yolo11n.pt
+  max_fps: 5
+  threads: 2
+
+plate:
+  enabled: true
+  min_vehicle_height_px: 70
+  interval_s: 0.1          # Check OCR more frequently during entry
+  confirm_reads: 2         # Lower required consistent reads to lock in faster
+  confirm_conf: 0.40       # Slightly relax confidence requirement
+  emit_deadline_s: 10.0     # Give it more time before timing out
+  min_crop_brightness: 8.0
+  max_crop_brightness: 247.0
+  min_crop_contrast: 5.0
+  min_crop_laplacian_var: 2.0
+  min_plate_detector_conf: 0.30
+  min_plate_width_px: 24
+  min_plate_height_px: 8
+  min_plate_aspect_ratio: 1.5
+  max_plate_aspect_ratio: 7.0
+
+publisher:
+  outbox_db: data/outbox_live.db
+  s2_url: https://smart-parking-data-service.onrender.com/internal/events/vehicle
+
+
+
+
+========== data\geometry_vn20261005.json ==========
+
+{
+ "frame_size": [
+  1088,
+  1920
+ ],
+ "tripwire": [
+  [
+   0,
+   1400
+  ],
+  [
+   1088,
+   1400
+  ]
+ ],
+ "inside_point": [
+  544,
+  1000
+ ],
+ "plate_zone": null,
+ "slots": [
+  {
+   "slot_id": "A-01",
+   "level": "L1",
+   "polygon": [
+    [
+     51.38,
+     864.0
+    ],
+    [
+     80.09,
+     859.2
+    ],
+    [
+     80.09,
+     940.8
+    ],
+    [
+     51.38,
+     936.0
+    ]
+   ]
+  },
+  {
+   "slot_id": "A-02",
+   "level": "L1",
+   "polygon": [
+    [
+     80.09,
+     859.2
+    ],
+    [
+     110.31,
+     854.4
+    ],
+    [
+     110.31,
+     946.8
+    ],
+    [
+     80.09,
+     940.8
+    ]
+   ]
+  },
+  {
+   "slot_id": "A-03",
+   "level": "L1",
+   "polygon": [
+    [
+     110.31,
+     854.4
+    ],
+    [
+     146.58,
+     848.4
+    ],
+    [
+     146.58,
+     954.0
+    ],
+    [
+     110.31,
+     946.8
+    ]
+   ]
+  },
+  {
+   "slot_id": "A-04",
+   "level": "L1",
+   "polygon": [
+    [
+     146.58,
+     848.4
+    ],
+    [
+     185.87,
+     841.2
+    ],
+    [
+     185.87,
+     961.2
+    ],
+    [
+     146.58,
+     954.0
+    ]
+   ]
+  },
+  {
+   "slot_id": "A-05",
+   "level": "L1",
+   "polygon": [
+    [
+     185.87,
+     841.2
+    ],
+    [
+     234.22,
+     830.4
+    ],
+    [
+     234.22,
+     973.2
+    ],
+    [
+     185.87,
+     961.2
+    ]
+   ]
+  },
+  {
+   "slot_id": "A-06",
+   "level": "L1",
+   "polygon": [
+    [
+     234.22,
+     830.4
+    ],
+    [
+     288.62,
+     817.2
+    ],
+    [
+     288.62,
+     985.2
+    ],
+    [
+     234.22,
+     973.2
+    ]
+   ]
+  },
+  {
+   "slot_id": "A-07",
+   "level": "L1",
+   "polygon": [
+    [
+     288.62,
+     817.2
+    ],
+    [
+     417.07,
+     792.0
+    ],
+    [
+     417.07,
+     1009.2
+    ],
+    [
+     288.62,
+     985.2
+    ]
+   ]
+  },
+  {
+   "slot_id": "A-08",
+   "level": "L1",
+   "polygon": [
+    [
+     417.07,
+     792.0
+    ],
+    [
+     598.4,
+     762.0
+    ],
+    [
+     598.4,
+     1039.2
+    ],
+    [
+     417.07,
+     1009.2
+    ]
+   ]
+  },
+  {
+   "slot_id": "A-09",
+   "level": "L1",
+   "polygon": [
+    [
+     598.4,
+     762.0
+    ],
+    [
+     767.64,
+     732.0
+    ],
+    [
+     767.64,
+     1062.0
+    ],
+    [
+     598.4,
+     1039.2
+    ]
+   ]
+  },
+  {
+   "slot_id": "A-10",
+   "level": "L1",
+   "polygon": [
+    [
+     767.64,
+     732.0
+    ],
+    [
+     1039.64,
+     696.0
+    ],
+    [
+     1039.64,
+     1080.0
+    ],
+    [
+     767.64,
+     1062.0
+    ]
+   ]
+  }
+ ]
+}

@@ -203,6 +203,7 @@ class Occupant:
     last_seen: float
     lost_since: object = None
     baseline: bool = False
+    occupancy_source: str = "LIVE_ENTRY"
 
 
 class SlotManager:
@@ -245,6 +246,21 @@ class SlotManager:
             "slot_id": sid,
             "level": s["level"],
         }
+
+    def slot_states(self):
+        """Return one FREE/OCCUPIED record for every calibrated slot."""
+        states = []
+        for sid, slot in self.slots.items():
+            occ = self.occupants.get(sid)
+            states.append({
+                "slot_id": sid,
+                "level": slot["level"],
+                "state": "OCCUPIED" if occ is not None else "FREE",
+                "track_id": occ.track_id if occ is not None else None,
+                "vehicle_uid": occ.vehicle.uid if occ is not None else None,
+                "occupancy_source": occ.occupancy_source if occ is not None else None,
+            })
+        return states
 
     def overlaps(self, bbox):
         x1, y1, x2, y2 = bbox
@@ -517,8 +533,13 @@ class SlotManager:
                         candidate_since if candidate_since is not None else start
                     )
                     slot_dwell = max(0.0, ts - slot_dwell_start)
+                    stationary_dwell = max(0.0, ts - start)
+                    required_dwell = float(c["park_dwell_s"])
 
-                    if slot_dwell < c["park_dwell_s"]:
+                    if (
+                        slot_dwell < required_dwell
+                        or stationary_dwell < required_dwell
+                    ):
                         log.debug(
                             "PARK_START_WAIT track=%s slot=%s reason=slot_dwell "
                             "overlap=%.3f dwell=%.2fs required=%.2fs history=%d",
@@ -564,6 +585,7 @@ class SlotManager:
                         start,
                         ts,
                         baseline=is_baseline,
+                        occupancy_source=("INITIAL_SCAN" if is_baseline else "LIVE_ENTRY"),
                     )
 
                     v.slot_id = sid
@@ -621,12 +643,12 @@ class SlotManager:
 
                 if not leaving:
                     st["depart_since"] = None
-
-                    # Refresh the anchor while the vehicle remains
-                    # confidently inside its assigned slot.
-                    if overlap >= leave_overlap:
-                        st["anchor"] = (cx, cy)
-
+                    # Keep the parked-position anchor stable. Refreshing it on
+                    # every frame lets a slowly departing vehicle drag the
+                    # anchor along with it, so cumulative movement is never
+                    # large enough to trigger PARK_END. The anchor is set when
+                    # the vehicle becomes OCCUPIED and tolerates detector jitter
+                    # through moved_frac.
                     continue
 
                 if st["depart_since"] is None:
